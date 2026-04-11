@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まいと戦争</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #4a9aea; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+canvas { display: block; }
+#ui {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.85);
+  border-top: 2px solid #444;
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 20px; gap: 12px;
+}
+.unit-btn {
+  width: 80px; height: 90px; border: 2px solid #555; border-radius: 4px;
+  background: linear-gradient(180deg, #2a2a4a, #1a1a3a);
+  cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  transition: all 0.15s;
+  position: relative;
+}
+.unit-btn:hover { border-color: #88f; transform: translateY(-3px); }
+.unit-btn:active { transform: translateY(0); }
+.unit-btn .icon { font-size: 32px; }
+.unit-btn .name { color: #ccc; font-size: 11px; }
+.unit-btn .cost { color: #ffd700; font-size: 12px; font-weight: bold; }
+.unit-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.unit-btn .cooldown-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.7); border-radius: 0 0 8px 8px;
+  transition: height 0.1s;
+}
+#info {
+  position: fixed; top: 10px; left: 10px; right: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  color: white; font-size: 16px; pointer-events: none;
+}
+#gold-display { color: #ffd700; font-size: 20px; font-weight: bold; }
+#hp-container {
+  display: flex; gap: 20px;
+}
+.hp-bar-wrapper {
+  display: flex; align-items: center; gap: 8px;
+}
+.hp-bar {
+  width: 200px; height: 20px; background: #333; border-radius: 4px;
+  overflow: hidden; border: 1px solid #555;
+}
+.hp-bar-fill {
+  height: 100%; transition: width 0.3s; border-radius: 4px;
+}
+.hp-label { font-size: 13px; }
+#wave-display { color: #aaf; font-size: 18px; font-weight: bold; text-align: center; }
+#game-over {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; color: white; z-index: 10;
+}
+#game-over h1 { font-size: 48px; margin-bottom: 20px; }
+#game-over button {
+  padding: 12px 30px; font-size: 20px; border: none; border-radius: 8px;
+  background: #4a4aff; color: white; cursor: pointer;
+}
+#game-over button:hover { background: #6a6aff; }
+
+/* Menu Screen */
+#menu-screen {
+  position: fixed; inset: 0; z-index: 20;
+  background: linear-gradient(180deg, #5ab8ff, #3a8eea);
+  display: flex; flex-direction: column; align-items: center;
+}
+#menu-title {
+  font-size: 42px; font-weight: bold; color: white;
+  text-shadow: 3px 3px 0 #2a5aaa;
+  margin-top: 30px;
+}
+#menu-content {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; width: 100%; max-width: 600px; padding: 20px;
+}
+#menu-castle {
+  width: 180px; height: 180px; margin-bottom: 20px;
+}
+#play-btn {
+  padding: 16px 60px; font-size: 28px; border: none; border-radius: 50px;
+  background: linear-gradient(180deg, #ff6b6b, #ee4444);
+  color: white; cursor: pointer; font-weight: bold;
+  box-shadow: 0 4px 0 #bb2222;
+  transition: all 0.15s;
+  margin-bottom: 30px;
+}
+#play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #bb2222; }
+#play-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bb2222; }
+
+/* Equip grid */
+#equip-section {
+  width: 100%; max-width: 600px; padding: 10px 20px; margin-bottom: 10px;
+}
+#equip-section h3 {
+  color: white; font-size: 16px; margin-bottom: 10px; text-align: center;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+#equip-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
+  gap: 8px;
+}
+.equip-card {
+  height: 80px; background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 2px solid #c8a020; border-radius: 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: all 0.15s;
+}
+.equip-card:hover { border-color: #ffd700; transform: translateY(-2px); }
+.equip-card .icon { font-size: 30px; }
+.equip-card .name { font-size: 11px; color: #ffd700; font-weight: bold; }
+.equip-card.empty { border-style: dashed; opacity: 0.5; }
+.equip-card.empty::after { content: '＋'; font-size: 24px; color: #c8a020; }
+
+/* Bottom Nav */
+#bottom-nav {
+  display: flex; width: 100%; background: #111;
+  border-top: 3px solid #c8a020; padding: 2px;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 10px 4px; cursor: pointer;
+  border: 3px solid #c8a020; background: #1a1a1a; transition: all 0.15s;
+  gap: 2px; margin: 4px; border-radius: 4px;
+  box-shadow: inset 0 0 8px rgba(200,160,32,0.3), 0 2px 4px rgba(0,0,0,0.3);
+}
+.nav-btn:hover { border-color: #ffd700; box-shadow: inset 0 0 12px rgba(255,215,0,0.4), 0 0 8px rgba(255,215,0,0.3); }
+.nav-btn.active { border-color: #ffd700; background: #2a2a2a; box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px rgba(255,215,0,0.4); }
+.nav-btn .nav-icon { font-size: 24px; }
+.nav-btn .nav-label { font-size: 11px; color: #fff; font-weight: bold; }
+.nav-btn.active .nav-label { color: #fff; }
+
+/* Sub pages */
+.menu-page {
+  display: none; flex: 1; flex-direction: column; align-items: center;
+  justify-content: flex-start; width: 100%; max-width: 600px;
+  padding: 20px; overflow-y: auto;
+}
+.menu-page.active { display: flex; }
+.menu-page h2 { color: white; font-size: 24px; margin-bottom: 16px; text-shadow: 2px 2px 0 rgba(0,0,0,0.2); }
+
+/* Level up page */
+.levelup-card {
+  width: 100%; background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 2px solid #c8a020; border-radius: 4px;
+  padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,215,0,0.1);
+  transition: all 0.15s;
+}
+.levelup-card:hover { border-color: #ffd700; transform: translateY(-2px); }
+.levelup-card .icon { font-size: 38px; background: rgba(255,215,0,0.1); border-radius: 4px; padding: 8px; }
+.levelup-card .info { flex: 1; color: white; }
+.levelup-card .info .name { font-size: 16px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.levelup-card .info .stats { font-size: 12px; color: #aaa; margin-top: 2px; }
+.levelup-btn {
+  padding: 10px 18px; border: 2px solid #ffd700; border-radius: 4px;
+  background: linear-gradient(180deg, #44dd44, #22aa22);
+  color: white; font-weight: bold; font-size: 14px; cursor: pointer;
+  box-shadow: 0 3px 0 #117711; transition: all 0.1s;
+}
+.levelup-btn:hover { background: linear-gradient(180deg, #55ee55, #33bb33); transform: translateY(-1px); }
+.levelup-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #117711; }
+
+/* Gacha page */
+#gacha-area {
+  text-align: center; width: 100%;
+}
+.gacha-btn {
+  padding: 16px 40px; font-size: 22px; border: 3px solid #ffd700;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1a1a2a, #2a2a3a);
+  color: #ffd700; font-weight: bold; cursor: pointer;
+  box-shadow: 0 4px 0 #996600, inset 0 0 15px rgba(255,215,0,0.1); margin: 20px;
+  transition: all 0.15s;
+}
+.gacha-btn:hover { background: linear-gradient(180deg, #2a2a3a, #3a3a4a); box-shadow: 0 4px 0 #996600, 0 0 12px rgba(255,215,0,0.3); }
+.gacha-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #996600; }
+#gacha-machine {
+  width: 220px; margin: 0 auto 20px; position: relative;
+}
+#gacha-top {
+  width: 120px; height: 30px; margin: 0 auto;
+  background: linear-gradient(180deg, #ff4444, #cc2222);
+  border-radius: 4px 4px 0 0; border: 3px solid #222;
+  border-bottom: none;
+}
+#gacha-globe {
+  width: 180px; height: 180px; margin: 0 auto;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.4), transparent 60%),
+              linear-gradient(180deg, rgba(255,255,255,0.2), rgba(0,0,0,0.1));
+  border: 4px solid #222; border-radius: 50%;
+  position: relative; overflow: hidden;
+}
+#gacha-balls { position: absolute; inset: 0; transition: transform 0.5s; }
+.gball {
+  position: absolute; font-size: 22px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  transition: all 0.5s;
+}
+#gacha-body {
+  width: 200px; height: 60px; margin: -2px auto 0;
+  background: linear-gradient(180deg, #ff4444, #cc2222);
+  border: 3px solid #222; border-radius: 0 0 8px 8px;
+}
+#gacha-handle {
+  position: absolute; right: -30px; top: 120px;
+  width: 50px; height: 20px; background: #888;
+  border: 2px solid #222; border-radius: 4px;
+  cursor: pointer; transition: transform 0.3s;
+}
+#gacha-handle:hover { transform: rotate(-15deg); }
+#gacha-handle.turning { animation: turnHandle 0.5s ease-in-out; }
+#gacha-knob {
+  width: 20px; height: 20px; background: radial-gradient(circle, #ddd, #888);
+  border: 2px solid #222; border-radius: 50%;
+  position: absolute; right: -10px; top: -2px;
+}
+#gacha-exit {
+  width: 50px; height: 30px; margin: 0 auto;
+  background: #222; border-radius: 0 0 10px 10px;
+  border: 2px solid #111;
+}
+@keyframes turnHandle {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(-45deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes shakeBalls {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(8deg); }
+  75% { transform: rotate(-8deg); }
+}
+#gacha-result {
+  font-size: 60px; margin: 10px; min-height: 70px;
+}
+
+/* Shop page */
+.shop-item {
+  width: 100%; background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 2px solid #c8a020; border-radius: 4px;
+  padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,215,0,0.1);
+  transition: all 0.15s;
+}
+.shop-item:hover { border-color: #ffd700; transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.5), 0 0 8px rgba(255,215,0,0.2); }
+.shop-item .icon { font-size: 38px; background: rgba(255,215,0,0.1); border-radius: 4px; padding: 8px; }
+.shop-item .info { flex: 1; color: white; }
+.shop-item .info .name { font-size: 16px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.shop-item .info .desc { font-size: 12px; color: #aaa; margin-top: 2px; }
+.buy-btn {
+  padding: 10px 18px; border: 2px solid #ffd700; border-radius: 4px;
+  background: linear-gradient(180deg, #ffd700, #cc9900);
+  color: #1a1a1a; font-weight: bold; font-size: 13px; cursor: pointer;
+  box-shadow: 0 3px 0 #996600; transition: all 0.1s;
+}
+.buy-btn:hover { background: linear-gradient(180deg, #ffe44d, #ddaa00); transform: translateY(-1px); }
+.buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #996600; }
+#shop-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px; width: 100%;
+}
+.shop-tab {
+  flex: 1; padding: 10px 8px; border: 2px solid #c8a020; border-radius: 4px;
+  background: #1a1a1a; color: #fff; font-size: 13px; font-weight: bold;
+  cursor: pointer; transition: all 0.15s;
+}
+.shop-tab:hover { border-color: #ffd700; }
+.shop-tab.active { background: #2a2a2a; border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+</style>
+</head>
+<body>
+<div id="menu-screen">
+  <div id="menu-title">まいと戦争</div>
+
+  <!-- Home Page -->
+  <div class="menu-page active" id="page-home">
+    <div id="equip-section">
+      <h3>装備中のキャラ</h3>
+      <div id="equip-grid"></div>
+    </div>
+    <img id="menu-castle" src="ally_castle.png">
+    <button id="play-btn" onclick="startBattle()">バトル開始</button>
+  </div>
+
+  <!-- Level Up Page -->
+  <div class="menu-page" id="page-levelup">
+    <h2>レベルアップ</h2>
+    <div id="levelup-list"></div>
+  </div>
+
+  <!-- Gacha Page -->
+  <div class="menu-page" id="page-gacha">
+    <h2>ガチャ</h2>
+    <div id="gacha-area">
+      <div id="gacha-machine">
+        <div id="gacha-top"></div>
+        <div id="gacha-globe">
+          <div id="gacha-balls">
+            <span class="gball" style="top:25%;left:20%;background:#f44">●</span>
+            <span class="gball" style="top:40%;left:55%;background:#4af">●</span>
+            <span class="gball" style="top:55%;left:30%;background:#fd0">●</span>
+            <span class="gball" style="top:35%;left:70%;background:#4f4">●</span>
+            <span class="gball" style="top:60%;left:60%;background:#f4f">●</span>
+            <span class="gball" style="top:50%;left:15%;background:#fa0">●</span>
+            <span class="gball" style="top:30%;left:40%;background:#aaf">●</span>
+            <span class="gball" style="top:65%;left:45%;background:#f88">●</span>
+          </div>
+        </div>
+        <div id="gacha-body"></div>
+        <div id="gacha-handle" onclick="doGacha()">
+          <div id="gacha-knob"></div>
+        </div>
+        <div id="gacha-exit"></div>
+      </div>
+      <div id="gacha-result"></div>
+      <button class="gacha-btn" onclick="doGacha()">ガチャを回す！</button>
+    </div>
+  </div>
+
+  <!-- Shop Page -->
+  <div class="menu-page" id="page-shop">
+    <h2>おみせ</h2>
+    <div id="shop-tabs">
+      <button class="shop-tab active" onclick="showShopTab('gold')">💰 お金</button>
+      <button class="shop-tab" onclick="showShopTab('gem')">💎 ジェム</button>
+      <button class="shop-tab" onclick="showShopTab('ticket')">🎫 ガチャチケット</button>
+    </div>
+    <div id="shop-list"></div>
+  </div>
+
+  <div id="bottom-nav">
+    <button class="nav-btn active" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span><span class="nav-label">ホーム</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('levelup')">
+      <span class="nav-icon">⬆️</span><span class="nav-label">レベルUP</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('gacha')">
+      <span class="nav-icon">🎰</span><span class="nav-label">ガチャ</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('shop')">
+      <span class="nav-icon">🛒</span><span class="nav-label">おみせ</span>
+    </button>
+  </div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="info">
+  <div id="hp-container">
+    <div class="hp-bar-wrapper">
+      <span class="hp-label" style="color:#4af">味方基地</span>
+      <div class="hp-bar"><div id="ally-hp" class="hp-bar-fill" style="width:100%;background:#4af"></div></div>
+    </div>
+    <div class="hp-bar-wrapper">
+      <span class="hp-label" style="color:#f44">敵基地</span>
+      <div class="hp-bar"><div id="enemy-hp" class="hp-bar-fill" style="width:100%;background:#f44"></div></div>
+    </div>
+  </div>
+  <div id="wave-display">WAVE 1</div>
+  <div id="gold-display">💰 100</div>
+</div>
+
+<div id="ui"></div>
+
+<div id="game-over">
+  <h1 id="result-text"></h1>
+  <button onclick="restartGame()">もう一度</button>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const bgm = new Audio('まいと大戦争１面.mp3');
+bgm.loop = true;
+bgm.volume = 0.5;
+document.addEventListener('click', () => {
+  if (bgm.paused) bgm.play();
+}, { once: true });
+
+const allyCastleImg = new Image();
+allyCastleImg.src = 'ally_castle.png';
+const enemyCastleImg = new Image();
+enemyCastleImg.src = 'enemy_castle.png';
+const selfWalkImgs = [new Image(), new Image(), new Image()];
+selfWalkImgs[0].src = '歩く１.png';
+selfWalkImgs[1].src = '歩く２.png';
+selfWalkImgs[2].src = '歩く３.png';
+const heroWalkImgs = [new Image(), new Image(), new Image()];
+heroWalkImgs[0].src = '勇者歩く１.png';
+heroWalkImgs[1].src = '勇者歩く２.png';
+heroWalkImgs[2].src = '勇者歩く３.png';
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const BASE_WIDTH = 80;
+const UI_HEIGHT = 110;
+function groundY() { return canvas.height * 0.75; }
+
+const UNIT_TYPES = [
+  { id: 'self',     name: 'じぶん', icon: '😤', cost: 0,   hp: 300, atk: 30, speed: 1.6, range: 50,  atkSpeed: 700,  color: '#ff0', cooldown: 10000 },
+  { id: 'soldier',  name: '兵士',   icon: '🗡️', cost: 50,  hp: 100, atk: 15, speed: 1.5, range: 40,  atkSpeed: 800,  color: '#4af', cooldown: 2000 },
+  { id: 'archer',   name: '弓兵',   icon: '🏹', cost: 75,  hp: 70,  atk: 20, speed: 1.2, range: 150, atkSpeed: 1200, color: '#8f4', cooldown: 3000 },
+  { id: 'knight',   name: '騎士',   icon: '🛡️', cost: 150, hp: 250, atk: 25, speed: 1.0, range: 45,  atkSpeed: 1000, color: '#48f', cooldown: 5000 },
+  { id: 'mage',     name: '魔法使い', icon: '🔮', cost: 120, hp: 60,  atk: 35, speed: 1.1, range: 180, atkSpeed: 1500, color: '#c4f', cooldown: 4000 },
+  { id: 'giant',    name: '巨人',   icon: '👹', cost: 250, hp: 500, atk: 50, speed: 0.6, range: 50,  atkSpeed: 1500, color: '#fa4', cooldown: 8000 },
+  { id: 'hero',     name: '勇者',   icon: '⚔️', cost: 200, hp: 400, atk: 45, speed: 1.3, range: 55,  atkSpeed: 600,  color: '#ffd700', cooldown: 7000 },
+  { id: 'healer',   name: 'ヒーラー', icon: '💚', cost: 100, hp: 80,  atk: 5,  speed: 1.0, range: 120, atkSpeed: 2000, color: '#4f4',    cooldown: 5000 },
+  { id: 'ninja',    name: '忍者',   icon: '🌀', cost: 130, hp: 90,  atk: 28, speed: 2.2, range: 40,  atkSpeed: 500,  color: '#808',    cooldown: 4000 },
+  { id: 'dragon',   name: 'ドラゴン', icon: '🐉', cost: 350, hp: 600, atk: 60, speed: 0.5, range: 100, atkSpeed: 1800, color: '#f80',    cooldown: 12000 },
+  { id: 'angel',    name: '天使',   icon: '👼', cost: 180, hp: 150, atk: 20, speed: 1.4, range: 130, atkSpeed: 1000, color: '#fff',    cooldown: 6000 },
+  { id: 'pirate',   name: '海賊',   icon: '🏴‍☠️', cost: 110, hp: 130, atk: 22, speed: 1.3, range: 45,  atkSpeed: 900,  color: '#a52',    cooldown: 3500 },
+  { id: 'golem',    name: 'ゴーレム', icon: '🪨', cost: 200, hp: 450, atk: 35, speed: 0.4, range: 40,  atkSpeed: 1600, color: '#886',    cooldown: 9000 },
+  { id: 'witch',    name: '魔女',   icon: '🧹', cost: 140, hp: 70,  atk: 40, speed: 1.1, range: 160, atkSpeed: 1400, color: '#a0f',    cooldown: 5000 },
+  { id: 'samurai',  name: '侍',     icon: '⛩️', cost: 160, hp: 200, atk: 38, speed: 1.5, range: 50,  atkSpeed: 700,  color: '#d22',    cooldown: 5500 },
+  { id: 'elf',      name: 'エルフ', icon: '🧝', cost: 90,  hp: 65,  atk: 25, speed: 1.3, range: 170, atkSpeed: 1100, color: '#2a8',    cooldown: 3500 },
+  { id: 'king',     name: '王様',   icon: '👑', cost: 400, hp: 500, atk: 55, speed: 0.8, range: 60,  atkSpeed: 800,  color: '#da0',    cooldown: 15000 },
+];
+
+const ENEMY_TYPES = [
+  { id: 'goblin',  name: 'ゴブリン', hp: 60,  atk: 10, speed: 1.4, range: 35,  atkSpeed: 900,  color: '#4a2', size: 1 },
+  { id: 'orc',     name: 'オーク',   hp: 150, atk: 20, speed: 0.9, range: 40,  atkSpeed: 1100, color: '#6a3', size: 1.3 },
+  { id: 'skeleton', name: 'スケルトン', hp: 40, atk: 12, speed: 1.8, range: 35, atkSpeed: 700, color: '#ddd', size: 0.9 },
+  { id: 'wizard',  name: '闇魔導士', hp: 80,  atk: 30, speed: 1.0, range: 140, atkSpeed: 1400, color: '#a3f', size: 1.1 },
+  { id: 'demon',   name: 'デーモン', hp: 400, atk: 40, speed: 0.7, range: 50,  atkSpeed: 1200, color: '#f22', size: 1.5 },
+];
+
+let gold, allyBaseHp, enemyBaseHp, wave, units, enemies, projectiles, particles;
+let goldTimer, waveTimer, gameOver, cooldowns, enemySpawnQueue;
+const MAX_BASE_HP = 1000;
+
+function initGame() {
+  gold = 100;
+  allyBaseHp = MAX_BASE_HP;
+  enemyBaseHp = MAX_BASE_HP;
+  wave = 1;
+  units = [];
+  enemies = [];
+  projectiles = [];
+  particles = [];
+  goldTimer = 0;
+  waveTimer = 0;
+  gameOver = false;
+  cooldowns = {};
+  enemySpawnQueue = [];
+  UNIT_TYPES.forEach(u => cooldowns[u.id] = 0);
+  spawnWave();
+  document.getElementById('game-over').style.display = 'none';
+}
+
+function spawnWave() {
+  enemySpawnQueue = [];
+  const count = 3 + wave * 2;
+  for (let i = 0; i < count; i++) {
+    let pool;
+    if (wave <= 2) pool = ENEMY_TYPES.slice(0, 2);
+    else if (wave <= 4) pool = ENEMY_TYPES.slice(0, 3);
+    else if (wave <= 6) pool = ENEMY_TYPES.slice(0, 4);
+    else pool = ENEMY_TYPES;
+
+    const type = pool[Math.floor(Math.random() * pool.length)];
+    const hpMult = 1 + (wave - 1) * 0.15;
+    const atkMult = 1 + (wave - 1) * 0.1;
+    enemySpawnQueue.push({
+      delay: i * 1200,
+      type: { ...type, hp: Math.floor(type.hp * hpMult), atk: Math.floor(type.atk * atkMult) }
+    });
+  }
+  document.getElementById('wave-display').textContent = `WAVE ${wave}`;
+}
+
+function allyBaseX() { return 190; }
+function enemyBaseX() { return canvas.width - 190; }
+
+function spawnUnit(type) {
+  if (gold < type.cost || cooldowns[type.id] > 0) return;
+  gold -= type.cost;
+  cooldowns[type.id] = type.cooldown;
+  units.push({
+    ...type, x: allyBaseX() + BASE_WIDTH / 2 + 20, y: groundY(),
+    currentHp: type.hp, lastAtk: 0, side: 'ally'
+  });
+}
+
+function spawnEnemy(type) {
+  enemies.push({
+    ...type, x: enemyBaseX(), y: groundY(),
+    currentHp: type.hp, maxHp: type.hp, lastAtk: 0, side: 'enemy'
+  });
+}
+
+function addProjectile(from, to, color) {
+  projectiles.push({ x: from.x, y: from.y - 15, tx: to.x, ty: to.y - 15, color, speed: 5, life: 1 });
+}
+
+function addParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      life: 1, color, size: Math.random() * 3 + 1
+    });
+  }
+}
+
+function addDamageText(x, y, dmg, color) {
+  particles.push({
+    x, y: y - 20, vx: 0, vy: -1,
+    life: 1, color, size: 0, text: `-${dmg}`
+  });
+}
+
+function findTarget(entity, opponents) {
+  let closest = null, minDist = Infinity;
+  for (const opp of opponents) {
+    const d = Math.abs(entity.x - opp.x);
+    if (d < minDist) { minDist = d; closest = opp; }
+  }
+  return closest;
+}
+
+let lastTime = 0;
+function update(time) {
+  if (gameOver) return;
+  const dt = Math.min(time - lastTime, 50);
+  lastTime = time;
+
+  // Gold generation
+  goldTimer += dt;
+  if (goldTimer >= 1000) { gold += 10 + wave * 2; goldTimer -= 1000; }
+
+  // Cooldowns
+  for (const id in cooldowns) {
+    if (cooldowns[id] > 0) cooldowns[id] = Math.max(0, cooldowns[id] - dt);
+  }
+
+  // Enemy spawn queue
+  waveTimer += dt;
+  for (let i = enemySpawnQueue.length - 1; i >= 0; i--) {
+    if (waveTimer >= enemySpawnQueue[i].delay) {
+      spawnEnemy(enemySpawnQueue[i].type);
+      enemySpawnQueue.splice(i, 1);
+    }
+  }
+
+  // Next wave
+  if (enemySpawnQueue.length === 0 && enemies.length === 0) {
+    wave++;
+    waveTimer = 0;
+    gold += 50;
+    spawnWave();
+  }
+
+  const now = time;
+
+  // Update ally units
+  for (const unit of units) {
+    const target = findTarget(unit, enemies);
+    const distToBase = enemyBaseX() - unit.x;
+    if (target && Math.abs(unit.x - target.x) <= unit.range) {
+      if (now - unit.lastAtk >= unit.atkSpeed) {
+        unit.lastAtk = now;
+        target.currentHp -= unit.atk;
+        addDamageText(target.x, target.y, unit.atk, '#ff0');
+        if (unit.range > 60) addProjectile(unit, target, unit.color);
+        addParticles(target.x, target.y, '#ff4', 3);
+      }
+    } else if (distToBase > BASE_WIDTH / 2) {
+      unit.x += unit.speed * (dt / 16);
+    } else {
+      if (now - unit.lastAtk >= unit.atkSpeed) {
+        unit.lastAtk = now;
+        enemyBaseHp -= unit.atk;
+        addParticles(enemyBaseX(), groundY(), '#f44', 5);
+      }
+    }
+  }
+
+  // Update enemies
+  for (const enemy of enemies) {
+    const target = findTarget(enemy, units);
+    const distToBase = enemy.x - allyBaseX();
+    if (target && Math.abs(enemy.x - target.x) <= enemy.range) {
+      if (now - enemy.lastAtk >= enemy.atkSpeed) {
+        enemy.lastAtk = now;
+        target.currentHp -= enemy.atk;
+        addDamageText(target.x, target.y, enemy.atk, '#f44');
+        if (enemy.range > 60) addProjectile(enemy, target, enemy.color);
+        addParticles(target.x, target.y, '#f44', 3);
+      }
+    } else if (distToBase > BASE_WIDTH / 2) {
+      enemy.x -= enemy.speed * (dt / 16);
+    } else {
+      if (now - enemy.lastAtk >= enemy.atkSpeed) {
+        enemy.lastAtk = now;
+        allyBaseHp -= enemy.atk;
+        addParticles(allyBaseX(), groundY(), '#4af', 5);
+      }
+    }
+  }
+
+  // Remove dead
+  units = units.filter(u => {
+    if (u.currentHp <= 0) { addParticles(u.x, u.y, u.color, 8); return false; }
+    return true;
+  });
+  enemies = enemies.filter(e => {
+    if (e.currentHp <= 0) {
+      addParticles(e.x, e.y, e.color, 8);
+      gold += 10 + wave * 3;
+      return false;
+    }
+    return true;
+  });
+
+  // Projectiles
+  for (const p of projectiles) {
+    const dx = p.tx - p.x, dy = p.ty - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < p.speed * 2) { p.life = 0; continue; }
+    p.x += (dx / dist) * p.speed * (dt / 16);
+    p.y += (dy / dist) * p.speed * (dt / 16);
+  }
+  projectiles = projectiles.filter(p => p.life > 0);
+
+  // Particles
+  for (const p of particles) {
+    p.x += p.vx * (dt / 16);
+    p.y += p.vy * (dt / 16);
+    p.life -= 0.02 * (dt / 16);
+  }
+  particles = particles.filter(p => p.life > 0);
+
+  // Check win/lose
+  if (allyBaseHp <= 0) { endGame(false); }
+  if (enemyBaseHp <= 0) { endGame(true); }
+
+  // Update UI
+  document.getElementById('gold-display').textContent = `💰 ${gold}`;
+  document.getElementById('ally-hp').style.width = `${Math.max(0, allyBaseHp / MAX_BASE_HP * 100)}%`;
+  document.getElementById('enemy-hp').style.width = `${Math.max(0, enemyBaseHp / MAX_BASE_HP * 100)}%`;
+  updateButtons();
+}
+
+function endGame(won) {
+  gameOver = true;
+  const overlay = document.getElementById('game-over');
+  overlay.style.display = 'flex';
+  document.getElementById('result-text').textContent = won ? '🎉 勝利！' : '💀 敗北...';
+  document.getElementById('result-text').style.color = won ? '#4f4' : '#f44';
+}
+
+function restartGame() {
+  initGame();
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function drawBase(x, gy, isEnemy) {
+  const img = isEnemy ? enemyCastleImg : allyCastleImg;
+  const dw = 360, dh = 360;
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.save();
+    if (isEnemy) {
+      ctx.translate(x, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, -dw/2, gy - dh + 45, dw, dh);
+    } else {
+      ctx.drawImage(img, x - dw/2, gy - dh + 45, dw, dh);
+    }
+    ctx.restore();
+  }
+}
+
+function drawUnit(entity, isEnemy) {
+  const sc = (entity.size || 1) * 1.0;
+  const x = entity.x, y = entity.y;
+  const dir = isEnemy ? -1 : 1;
+  const t = performance.now();
+  const isAtk = (t - entity.lastAtk) < 300 && entity.lastAtk > 0;
+  const walk = Math.sin(t / 120 + entity.x) * (isAtk ? 0 : 3 * sc);
+  const cc = entity.color;
+
+  // Special: 勇者 uses hero sprite
+  if (entity.id === 'hero' && !isEnemy) {
+    const heroOrder = [1, 0, 2, 0, 1, 0, 2, 0];
+    const heroFrame = heroWalkImgs[heroOrder[Math.floor(t / 280) % 8]];
+    if (heroFrame.complete && heroFrame.naturalWidth > 0) {
+      const h = 85;
+      const w = h * (heroFrame.naturalWidth / heroFrame.naturalHeight);
+      ctx.save();
+      ctx.translate(x, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(heroFrame, -w/2, y - h, w, h);
+      ctx.restore();
+      const hpRatio = entity.currentHp / (entity.maxHp || entity.hp);
+      if (hpRatio < 1) {
+        const bw = 20;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x - bw/2, y - h - 6, bw, 3);
+        ctx.fillStyle = hpRatio > 0.5 ? '#0c0' : hpRatio > 0.25 ? '#cc0' : '#c00';
+        ctx.fillRect(x - bw/2, y - h - 6, bw * hpRatio, 3);
+      }
+      return;
+    }
+  }
+
+  // Special: じぶん uses walking sprite
+  if (entity.id === 'self' && !isEnemy) {
+    const order = [1, 0, 2, 0, 1, 0, 2, 0];
+    const frame = selfWalkImgs[order[Math.floor(t / 280) % 8]];
+    if (frame.complete && frame.naturalWidth > 0) {
+      const h = 85;
+      const w = h * (frame.naturalWidth / frame.naturalHeight);
+      ctx.save();
+      ctx.translate(x, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(frame, -w/2, y - h, w, h);
+      ctx.restore();
+      // HP bar
+      const hpRatio = entity.currentHp / (entity.maxHp || entity.hp);
+      if (hpRatio < 1) {
+        const bw = 20;
+        ctx.fillStyle = '#111';
+        ctx.fillRect(x - bw/2, y - h - 6, bw, 3);
+        ctx.fillStyle = hpRatio > 0.5 ? '#0c0' : hpRatio > 0.25 ? '#cc0' : '#c00';
+        ctx.fillRect(x - bw/2, y - h - 6, bw * hpRatio, 3);
+      }
+      return;
+    }
+  }
+
+  ctx.lineCap = 'round';
+
+  // Legs
+  ctx.strokeStyle = cc; ctx.lineWidth = 3 * sc;
+  ctx.beginPath();
+  ctx.moveTo(x - 2*sc, y - 9*sc); ctx.lineTo(x - 3*sc + walk, y);
+  ctx.moveTo(x + 2*sc, y - 9*sc); ctx.lineTo(x + 3*sc - walk, y);
+  ctx.stroke();
+
+  // Body
+  ctx.fillStyle = cc;
+  ctx.fillRect(x - 4*sc, y - 18*sc, 8*sc, 9*sc);
+
+  // Arms
+  const aSwing = isAtk ? 6*sc*dir : walk;
+  ctx.strokeStyle = cc; ctx.lineWidth = 2.5*sc;
+  ctx.beginPath();
+  ctx.moveTo(x - 4*sc, y - 16*sc); ctx.lineTo(x - 7*sc - aSwing, y - 10*sc);
+  ctx.moveTo(x + 4*sc, y - 16*sc); ctx.lineTo(x + 7*sc + aSwing, y - 10*sc);
+  ctx.stroke();
+
+  // Head
+  ctx.fillStyle = '#f0c8a0';
+  ctx.beginPath(); ctx.arc(x, y - 22*sc, 5*sc, 0, Math.PI*2); ctx.fill();
+
+  // Hair
+  ctx.fillStyle = isEnemy ? '#333' : '#2a1508';
+  ctx.beginPath(); ctx.arc(x, y - 23.5*sc, 5*sc, Math.PI, Math.PI*2); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = isEnemy ? '#c22' : '#236';
+  ctx.fillRect(x - 3*sc, y - 23*sc, 2*sc, 2*sc);
+  ctx.fillRect(x + 1*sc, y - 23*sc, 2*sc, 2*sc);
+
+  // HP bar
+  const hpRatio = entity.currentHp / (entity.maxHp || entity.hp);
+  if (hpRatio < 1) {
+    const bw = 12*sc;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(x - bw/2, y - 30*sc, bw, 2*sc);
+    ctx.fillStyle = hpRatio > 0.5 ? '#0c0' : hpRatio > 0.25 ? '#cc0' : '#c00';
+    ctx.fillRect(x - bw/2, y - 30*sc, bw * hpRatio, 2*sc);
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const gy = groundY();
+
+  // Sky
+  const sky = ctx.createLinearGradient(0, 0, 0, gy);
+  sky.addColorStop(0, '#1a3a6a');
+  sky.addColorStop(1, '#4a8abf');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, gy);
+
+  // Clouds
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  for (let i = 0; i < 5; i++) {
+    const cx = ((performance.now() / 80 + i * 300) % (canvas.width + 200)) - 100;
+    ctx.beginPath(); ctx.ellipse(cx, 60 + i*30, 60, 20, 0, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Ground - dirt base
+  ctx.fillStyle = '#8b5a2b';
+  ctx.fillRect(0, gy, canvas.width, canvas.height - gy);
+  // Grass with jagged bottom edge
+  const grassH = 16;
+  const toothW = 14;
+  const toothH = 10;
+  ctx.fillStyle = '#4ea54e';
+  ctx.beginPath();
+  ctx.moveTo(0, gy);
+  ctx.lineTo(canvas.width, gy);
+  let i = 0;
+  for (let x = canvas.width; x >= 0; x -= toothW / 2) {
+    const y = gy + grassH + (i % 2 === 0 ? toothH : 0);
+    ctx.lineTo(x, y);
+    i++;
+  }
+  ctx.closePath();
+  ctx.fill();
+  // Grass top line
+  ctx.strokeStyle = '#2a5a2a'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+
+  // Castles
+  drawBase(allyBaseX(), gy, false);
+  drawBase(enemyBaseX(), gy, true);
+
+  // Units
+  for (const u of units) drawUnit(u, false);
+  for (const e of enemies) drawUnit(e, true);
+
+  // Projectiles
+  for (const p of projectiles) {
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Particles
+  for (const p of particles) {
+    ctx.globalAlpha = p.life;
+    if (p.text) {
+      ctx.fillStyle = p.color;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(p.text, p.x, p.y);
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function gameLoop(time) {
+  update(time);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+// Build UI buttons
+const uiContainer = document.getElementById('ui');
+UNIT_TYPES.forEach(type => {
+  const btn = document.createElement('div');
+  btn.className = 'unit-btn';
+  btn.id = `btn-${type.id}`;
+  btn.innerHTML = `
+    <span class="icon">${type.icon}</span>
+    <span class="name">${type.name}</span>
+    <span class="cost">💰${type.cost}</span>
+    <div class="cooldown-overlay" id="cd-${type.id}"></div>
+  `;
+  btn.addEventListener('click', () => spawnUnit(type));
+  uiContainer.appendChild(btn);
+});
+
+function updateButtons() {
+  UNIT_TYPES.forEach(type => {
+    const btn = document.getElementById(`btn-${type.id}`);
+    const cd = document.getElementById(`cd-${type.id}`);
+    const canAfford = gold >= type.cost && cooldowns[type.id] <= 0;
+    btn.classList.toggle('disabled', !canAfford);
+    const cdRatio = cooldowns[type.id] / type.cooldown;
+    cd.style.height = `${cdRatio * 100}%`;
+  });
+}
+
+// Menu system
+function showPage(name) {
+  document.querySelectorAll('.menu-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn')[['home','levelup','gacha','shop'].indexOf(name)].classList.add('active');
+}
+
+function buildEquipGrid() {
+  const grid = document.getElementById('equip-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const card = document.createElement('div');
+    if (i < UNIT_TYPES.length) {
+      card.className = 'equip-card';
+      card.innerHTML = `<span class="icon">${UNIT_TYPES[i].icon}</span><span class="name">${UNIT_TYPES[i].name}</span>`;
+    } else {
+      card.className = 'equip-card empty';
+    }
+    grid.appendChild(card);
+  }
+}
+
+function buildLevelUpList() {
+  const list = document.getElementById('levelup-list');
+  list.innerHTML = '';
+  UNIT_TYPES.forEach((u, i) => {
+    const card = document.createElement('div');
+    card.className = 'levelup-card';
+    const lvl = u._level || 1;
+    const cost = lvl * 50;
+    card.innerHTML = `
+      <span class="icon">${u.icon}</span>
+      <div class="info">
+        <div class="name">${u.name} Lv.${lvl}</div>
+        <div class="stats">HP:${u.hp} ATK:${u.atk} SPD:${u.speed}</div>
+      </div>
+      <button class="levelup-btn" onclick="levelUp(${i})">💰${cost} UP</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function levelUp(index) {
+  const u = UNIT_TYPES[index];
+  if (!u._level) u._level = 1;
+  const cost = u._level * 50;
+  u._level++;
+  u.hp = Math.floor(u.hp * 1.15);
+  u.atk = Math.floor(u.atk * 1.1);
+  buildLevelUpList();
+}
+
+const SHOP_ITEMS = {
+  gold: [
+    { icon: '💰', name: 'ゴールドパックS', desc: '100ゴールド獲得', price: '無料' },
+    { icon: '💰', name: 'ゴールドパックM', desc: '500ゴールド獲得', price: '200G' },
+    { icon: '💰', name: 'ゴールドパックL', desc: '2000ゴールド獲得', price: '700G' },
+  ],
+  gem: [
+    { icon: '💎', name: 'ジェム×10', desc: 'ジェム10個', price: '100G' },
+    { icon: '💎', name: 'ジェム×50', desc: 'ジェム50個', price: '450G' },
+    { icon: '💎', name: 'ジェム×120', desc: 'ジェム120個+ボーナス20', price: '900G' },
+    { icon: '💎', name: 'ジェム×300', desc: 'ジェム300個+ボーナス80', price: '2000G' },
+    { icon: '💎', name: 'ジェム×600', desc: 'ジェム600個+ボーナス200', price: '3500G' },
+    { icon: '🌟', name: '初回限定パック', desc: 'ジェム200+★5確定チケ', price: '500G' },
+  ],
+  ticket: [
+    { icon: '🎫', name: 'ノーマルチケット', desc: 'ガチャ1回', price: '50G' },
+    { icon: '🎫', name: 'ノーマルチケット×5', desc: 'ガチャ5回', price: '230G' },
+    { icon: '🎫', name: 'ノーマルチケット×11', desc: 'ガチャ11回(1回おまけ)', price: '450G' },
+    { icon: '🎟️', name: 'レアチケット', desc: '★3以上確定ガチャ', price: '200G' },
+    { icon: '🎟️', name: 'レアチケット×5', desc: '★3以上確定×5', price: '900G' },
+    { icon: '🌟', name: '★5確定チケット', desc: '★5キャラ確定', price: '1500G' },
+    { icon: '🎁', name: 'お得パック', desc: 'ノーマル×10+レア×3', price: '1000G' },
+  ],
+};
+let currentShopTab = 'gold';
+
+function showShopTab(tab) {
+  currentShopTab = tab;
+  document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.shop-tab')[['gold','gem','ticket'].indexOf(tab)].classList.add('active');
+  buildShopList();
+}
+
+function buildShopList() {
+  const list = document.getElementById('shop-list');
+  list.innerHTML = '';
+  SHOP_ITEMS[currentShopTab].forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'shop-item';
+    el.innerHTML = `
+      <span class="icon">${item.icon}</span>
+      <div class="info">
+        <div class="name">${item.name}</div>
+        <div class="desc">${item.desc}</div>
+      </div>
+      <button class="buy-btn">${item.price}</button>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function doGacha() {
+  const handle = document.getElementById('gacha-handle');
+  const balls = document.getElementById('gacha-balls');
+  const resultEl = document.getElementById('gacha-result');
+
+  handle.classList.add('turning');
+  balls.style.animation = 'shakeBalls 0.5s ease-in-out';
+  resultEl.textContent = '';
+
+  // Shuffle ball positions
+  document.querySelectorAll('.gball').forEach(b => {
+    b.style.top = (20 + Math.random() * 50) + '%';
+    b.style.left = (10 + Math.random() * 70) + '%';
+  });
+
+  setTimeout(() => {
+    handle.classList.remove('turning');
+    balls.style.animation = '';
+    const allUnits = UNIT_TYPES;
+    const pick = allUnits[Math.floor(Math.random() * allUnits.length)];
+    resultEl.innerHTML = `<span style="font-size:50px">${pick.icon}</span><br><span style="font-size:20px;color:white">${pick.name} GET!</span>`;
+  }, 600);
+}
+
+function startBattle() {
+  document.getElementById('menu-screen').style.display = 'none';
+  document.getElementById('info').style.display = 'flex';
+  document.getElementById('ui').style.display = 'flex';
+  if (bgm.paused) bgm.play();
+  initGame();
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+// Hide battle UI initially
+document.getElementById('info').style.display = 'none';
+document.getElementById('ui').style.display = 'none';
+
+// Build menu pages
+buildEquipGrid();
+buildLevelUpList();
+buildShopList();
+</script>
+</body>
+</html>
