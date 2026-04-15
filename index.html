@@ -74,24 +74,24 @@ canvas { display: block; }
   display: flex; flex-direction: column; align-items: center;
 }
 #menu-title {
-  font-size: 42px; font-weight: bold; color: white;
+  font-size: 36px; font-weight: bold; color: white;
   text-shadow: 3px 3px 0 #2a5aaa;
-  margin-top: 30px;
+  margin-top: 16px; margin-bottom: 8px;
 }
 #menu-content {
   flex: 1; display: flex; flex-direction: column; align-items: center;
   justify-content: center; width: 100%; max-width: 600px; padding: 20px;
 }
 #menu-castle {
-  width: 180px; height: 180px; margin-bottom: 20px;
+  width: 130px; height: 130px; margin-bottom: 12px;
 }
 #play-btn {
-  padding: 16px 60px; font-size: 28px; border: none; border-radius: 50px;
+  padding: 14px 50px; font-size: 24px; border: none; border-radius: 50px;
   background: linear-gradient(180deg, #ff6b6b, #ee4444);
   color: white; cursor: pointer; font-weight: bold;
   box-shadow: 0 4px 0 #bb2222;
   transition: all 0.15s;
-  margin-bottom: 30px;
+  margin-bottom: 16px;
 }
 #play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #bb2222; }
 #play-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bb2222; }
@@ -142,8 +142,237 @@ canvas { display: block; }
 .menu-page {
   display: none; flex: 1; flex-direction: column; align-items: center;
   justify-content: flex-start; width: 100%; max-width: 600px;
-  padding: 20px; overflow-y: auto;
+  padding: 20px; overflow-y: auto; min-height: 0;
 }
+#page-home { overflow-y: auto; }
+
+/* Player info bar */
+#player-info {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 2px solid #c8a020; border-radius: 4px; padding: 10px 14px;
+  margin-bottom: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+}
+#player-info .avatar { font-size: 36px; }
+#player-info .details { flex: 1; color: white; }
+#player-info .details .player-name { font-size: 16px; font-weight: bold; color: #ffd700; }
+#player-info .details .player-rank { font-size: 11px; color: #aaa; margin-top: 2px; }
+#player-info .currency { display: flex; gap: 12px; font-size: 14px; font-weight: bold; }
+#player-info .currency span { display: flex; align-items: center; gap: 4px; }
+.exp-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 4px; }
+.exp-bar-fill { height: 100%; width: 35%; background: linear-gradient(90deg, #4af, #48f); border-radius: 3px; }
+
+/* Daily missions */
+#daily-missions {
+  width: 100%; margin-bottom: 10px;
+}
+#daily-missions h3 {
+  color: #ffd700; font-size: 14px; margin-bottom: 6px;
+}
+.mission-item {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 1px solid #555; border-radius: 4px; padding: 8px 12px; margin-bottom: 4px;
+}
+.mission-item .mission-icon { font-size: 20px; }
+.mission-item .mission-text { flex: 1; color: #ccc; font-size: 12px; }
+.mission-item .mission-progress { color: #ffd700; font-size: 11px; font-weight: bold; }
+.mission-item .mission-reward {
+  font-size: 11px; color: #111; background: #ffd700; padding: 2px 8px;
+  border-radius: 3px; font-weight: bold; cursor: pointer;
+}
+.mission-item.done { opacity: 0.5; }
+.mission-item.done .mission-reward { background: #666; color: #999; cursor: default; }
+
+/* Notice banner */
+#notice-banner {
+  width: 100%; background: linear-gradient(90deg, #c8a020, #ffd700);
+  border-radius: 4px; padding: 8px 14px; margin-bottom: 10px;
+  color: #111; font-size: 13px; font-weight: bold; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+}
+#notice-banner:hover { filter: brightness(1.1); }
+
+/* Stamina bar */
+#stamina-bar-wrapper {
+  width: 100%; margin-bottom: 10px;
+}
+#stamina-bar-wrapper .stamina-label {
+  color: #4f4; font-size: 12px; font-weight: bold; margin-bottom: 3px;
+  display: flex; justify-content: space-between;
+}
+#stamina-bar {
+  width: 100%; height: 8px; background: #333; border-radius: 4px;
+  border: 1px solid #4a4;
+}
+#stamina-bar-fill {
+  height: 100%; width: 80%; background: linear-gradient(90deg, #4f4, #2d2);
+  border-radius: 4px;
+}
+
+/* Mission button - top right of menu-screen */
+#mission-btn {
+  position: fixed; top: 16px; right: 116px; z-index: 30;
+  background: none; border: none; padding: 0; cursor: pointer;
+  width: 100px; height: 100px;
+}
+#mission-btn img { width: 100%; height: 100%; object-fit: contain; }
+#mission-btn:hover { transform: scale(1.1); }
+#mission-btn:active { transform: scale(0.95); }
+#mission-btn .badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #f44; color: white; font-size: 11px; padding: 1px 6px;
+  border-radius: 10px; min-width: 18px; text-align: center;
+}
+
+/* Mission modal */
+#mission-modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 1000;
+  justify-content: center; align-items: center;
+}
+#mission-modal-overlay.show { display: flex; }
+#mission-modal {
+  width: 90%; max-width: 500px; max-height: 80vh;
+  background: linear-gradient(180deg, #1a1a2a, #0d0d1a);
+  border: 2px solid #c080ff; border-radius: 8px;
+  overflow: hidden; display: flex; flex-direction: column;
+}
+#mission-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #333;
+}
+#mission-modal-header h2 { color: #c080ff; font-size: 20px; margin: 0; }
+#mission-close-btn {
+  background: none; border: 1px solid #666; color: #aaa; font-size: 18px;
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+#mission-close-btn:hover { border-color: #fff; color: #fff; }
+#mission-tabs {
+  display: flex; border-bottom: 1px solid #333;
+}
+.mission-tab {
+  flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold;
+  color: #888; background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.mission-tab.active { color: #c080ff; border-bottom-color: #c080ff; }
+.mission-tab:hover { color: #d0a0ff; }
+#mission-modal-body {
+  padding: 12px 16px; overflow-y: auto; flex: 1;
+}
+.modal-mission-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px; background: #1a1a2a; border: 1px solid #333;
+  border-radius: 4px; margin-bottom: 6px;
+}
+.modal-mission-item .m-icon { font-size: 24px; }
+.modal-mission-item .m-info { flex: 1; }
+.modal-mission-item .m-name { font-size: 13px; color: white; font-weight: bold; }
+.modal-mission-item .m-desc { font-size: 11px; color: #888; margin-top: 2px; }
+.modal-mission-item .m-progress-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 4px; }
+.modal-mission-item .m-progress-fill { height: 100%; border-radius: 2px; background: #c080ff; }
+.modal-mission-item .m-reward-btn {
+  padding: 6px 12px; border: 1px solid #ffd700; border-radius: 4px;
+  background: linear-gradient(180deg, #ffd700, #cc9900);
+  color: #111; font-size: 11px; font-weight: bold; cursor: pointer;
+  white-space: nowrap;
+}
+.modal-mission-item .m-reward-btn.claimed {
+  background: #333; border-color: #555; color: #777; cursor: default;
+}
+.modal-mission-item .m-reward-btn:not(.claimed):hover { filter: brightness(1.1); }
+
+/* Login bonus */
+#login-bonus {
+  width: 100%; margin-bottom: 10px;
+}
+#login-bonus h3 { color: #ffd700; font-size: 14px; margin-bottom: 6px; }
+.login-days {
+  display: flex; gap: 4px;
+}
+.login-day {
+  flex: 1; text-align: center; padding: 6px 2px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 1px solid #555; border-radius: 4px; font-size: 10px; color: #aaa;
+}
+.login-day .day-num { font-size: 9px; color: #888; }
+.login-day .day-reward { font-size: 18px; margin: 2px 0; }
+.login-day .day-label { font-size: 9px; color: #ccc; }
+.login-day.claimed { border-color: #4f4; background: linear-gradient(135deg, #1a2a1a, #2a3a2a); }
+.login-day.claimed .day-label { color: #4f4; }
+.login-day.today { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+.login-day.today .day-label { color: #ffd700; }
+
+/* Event banner */
+.event-banner {
+  width: 100%; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
+  font-size: 13px; font-weight: bold; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.event-banner:hover { filter: brightness(1.1); }
+.event-banner.event-raid {
+  background: linear-gradient(90deg, #d32, #f44);
+  color: white;
+}
+.event-banner.event-collab {
+  background: linear-gradient(90deg, #38c, #4af);
+  color: white;
+}
+
+/* Friend list */
+#friend-activity {
+  width: 100%; margin-bottom: 10px;
+}
+#friend-activity h3 { color: #ffd700; font-size: 14px; margin-bottom: 6px; }
+.friend-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; background: #1a1a2a; border-radius: 4px; margin-bottom: 3px;
+  border: 1px solid #333;
+}
+.friend-row .friend-avatar { font-size: 22px; }
+.friend-row .friend-info { flex: 1; }
+.friend-row .friend-name { font-size: 12px; color: white; font-weight: bold; }
+.friend-row .friend-status { font-size: 10px; color: #888; }
+.friend-row .friend-online { width: 8px; height: 8px; border-radius: 50%; }
+.friend-row .friend-online.on { background: #4f4; box-shadow: 0 0 4px #4f4; }
+.friend-row .friend-online.off { background: #555; }
+
+/* Achievement progress */
+#achievement-preview {
+  width: 100%; margin-bottom: 10px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 1px solid #555; border-radius: 4px; padding: 10px 14px;
+}
+#achievement-preview h3 { color: #ffd700; font-size: 14px; margin-bottom: 6px; }
+.achievement-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.achievement-row .ach-icon { font-size: 18px; }
+.achievement-row .ach-info { flex: 1; }
+.achievement-row .ach-name { font-size: 11px; color: #ccc; }
+.ach-progress-bar { width: 100%; height: 5px; background: #333; border-radius: 3px; margin-top: 2px; }
+.ach-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffd700, #fa0); }
+.achievement-row .ach-pct { font-size: 10px; color: #aaa; white-space: nowrap; }
+
+/* Battle record */
+#battle-record {
+  width: 100%; margin-bottom: 10px;
+}
+#battle-record h3 { color: #ffd700; font-size: 14px; margin-bottom: 6px; }
+.record-stats {
+  display: flex; gap: 6px;
+}
+.record-stat {
+  flex: 1; text-align: center; padding: 10px 4px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border: 1px solid #555; border-radius: 4px;
+}
+.record-stat .stat-value { font-size: 22px; font-weight: bold; color: #ffd700; }
+.record-stat .stat-label { font-size: 10px; color: #aaa; margin-top: 2px; }
 .menu-page.active { display: flex; }
 .menu-page h2 { color: white; font-size: 24px; margin-bottom: 16px; text-shadow: 2px 2px 0 rgba(0,0,0,0.2); }
 
@@ -170,75 +399,52 @@ canvas { display: block; }
 .levelup-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #117711; }
 
 /* Gacha page */
+#page-gacha {
+  overflow: hidden; touch-action: none;
+  justify-content: center;
+}
 #gacha-area {
   text-align: center; width: 100%;
 }
 .gacha-btn {
-  padding: 16px 40px; font-size: 22px; border: 3px solid #ffd700;
+  padding: 12px 32px; font-size: 18px; border: 3px solid #ffd700;
   border-radius: 4px;
   background: linear-gradient(180deg, #1a1a2a, #2a2a3a);
   color: #ffd700; font-weight: bold; cursor: pointer;
   box-shadow: 0 4px 0 #996600, inset 0 0 15px rgba(255,215,0,0.1); margin: 20px;
   transition: all 0.15s;
+  touch-action: none;
 }
 .gacha-btn:hover { background: linear-gradient(180deg, #2a2a3a, #3a3a4a); box-shadow: 0 4px 0 #996600, 0 0 12px rgba(255,215,0,0.3); }
 .gacha-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #996600; }
+#gacha-wrapper {
+  position: relative; display: inline-block; margin: 0 auto 20px;
+  width: 280px;
+}
 #gacha-machine {
-  width: 220px; margin: 0 auto 20px; position: relative;
+  display: block; width: 100%;
+  cursor: pointer;
 }
-#gacha-top {
-  width: 120px; height: 30px; margin: 0 auto;
-  background: linear-gradient(180deg, #ff4444, #cc2222);
-  border-radius: 4px 4px 0 0; border: 3px solid #222;
-  border-bottom: none;
+#gacha-handle-img {
+  position: absolute;
+  /* The handle was cropped from (260,1450) to (800,1850) of a 1471x2048 image */
+  /* So in % of full image: left=17.7%, top=70.8%, width=36.7%, height=19.5% */
+  /* Compensated for new clip center (47%,56%) so visible knob stays in same screen position */
+  left: 15.1%; top: 70.9%;
+  width: 36.7%;
+  cursor: pointer;
+  /* The handle png has red background + extra body bits — clip to just the knob circle */
+  /* Knob bbox in handle png (540x400): center ~(252,225) → 47%, 56%; radius ~186px → ~39% */
+  clip-path: circle(39% at 47% 56%);
+  transform-origin: 47% 56%;
 }
-#gacha-globe {
-  width: 180px; height: 180px; margin: 0 auto;
-  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,0.4), transparent 60%),
-              linear-gradient(180deg, rgba(255,255,255,0.2), rgba(0,0,0,0.1));
-  border: 4px solid #222; border-radius: 50%;
-  position: relative; overflow: hidden;
-}
-#gacha-balls { position: absolute; inset: 0; transition: transform 0.5s; }
-.gball {
-  position: absolute; font-size: 22px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  transition: all 0.5s;
-}
-#gacha-body {
-  width: 200px; height: 60px; margin: -2px auto 0;
-  background: linear-gradient(180deg, #ff4444, #cc2222);
-  border: 3px solid #222; border-radius: 0 0 8px 8px;
-}
-#gacha-handle {
-  position: absolute; right: -30px; top: 120px;
-  width: 50px; height: 20px; background: #888;
-  border: 2px solid #222; border-radius: 4px;
-  cursor: pointer; transition: transform 0.3s;
-}
-#gacha-handle:hover { transform: rotate(-15deg); }
-#gacha-handle.turning { animation: turnHandle 0.5s ease-in-out; }
-#gacha-knob {
-  width: 20px; height: 20px; background: radial-gradient(circle, #ddd, #888);
-  border: 2px solid #222; border-radius: 50%;
-  position: absolute; right: -10px; top: -2px;
-}
-#gacha-exit {
-  width: 50px; height: 30px; margin: 0 auto;
-  background: #222; border-radius: 0 0 10px 10px;
-  border: 2px solid #111;
-}
-@keyframes turnHandle {
+#gacha-handle-img.turning { animation: spinKnob 0.6s linear; }
+@keyframes spinKnob {
   0% { transform: rotate(0deg); }
-  50% { transform: rotate(-45deg); }
-  100% { transform: rotate(0deg); }
-}
-@keyframes shakeBalls {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(8deg); }
-  75% { transform: rotate(-8deg); }
+  100% { transform: rotate(360deg); }
 }
 #gacha-result {
-  font-size: 60px; margin: 10px; min-height: 70px;
+  font-size: 24px; margin: 2px; min-height: 30px;
 }
 
 /* Shop page */
@@ -276,16 +482,155 @@ canvas { display: block; }
 </head>
 <body>
 <div id="menu-screen">
+  <button id="mission-btn" onclick="openMissionModal()">
+    <img src="ミッションボタン.png" alt="ミッション">
+    <span class="badge">3</span>
+  </button>
   <div id="menu-title">まいと戦争</div>
 
   <!-- Home Page -->
   <div class="menu-page active" id="page-home">
+    <!-- Player Info -->
+    <div id="player-info">
+      <div class="avatar">😤</div>
+      <div class="details">
+        <div class="player-name">まいと</div>
+        <div class="player-rank">ランク 7 ・ 戦闘力 1,250</div>
+        <div class="exp-bar"><div class="exp-bar-fill"></div></div>
+      </div>
+      <div class="currency">
+        <span style="color:#ffd700">💰 1,200</span>
+        <span style="color:#88f">💎 30</span>
+      </div>
+    </div>
+
+    <!-- Notice Banner -->
+    <div id="notice-banner">
+      📢 新キャラ「王様」登場！ピックアップガチャ開催中！
+    </div>
+
+    <!-- Stamina -->
+    <div id="stamina-bar-wrapper">
+      <div class="stamina-label">
+        <span>⚡ スタミナ</span>
+        <span>40 / 50</span>
+      </div>
+      <div id="stamina-bar"><div id="stamina-bar-fill"></div></div>
+    </div>
+
     <div id="equip-section">
       <h3>装備中のキャラ</h3>
       <div id="equip-grid"></div>
     </div>
     <img id="menu-castle" src="ally_castle.png">
     <button id="play-btn" onclick="startBattle()">バトル開始</button>
+
+    <!-- Login Bonus -->
+    <div id="login-bonus">
+      <h3>🎁 ログインボーナス</h3>
+      <div class="login-days">
+        <div class="login-day claimed"><div class="day-num">1日目</div><div class="day-reward">💰</div><div class="day-label">済</div></div>
+        <div class="login-day claimed"><div class="day-num">2日目</div><div class="day-reward">💰</div><div class="day-label">済</div></div>
+        <div class="login-day claimed"><div class="day-num">3日目</div><div class="day-reward">💎</div><div class="day-label">済</div></div>
+        <div class="login-day today"><div class="day-num">4日目</div><div class="day-reward">🎫</div><div class="day-label">今日!</div></div>
+        <div class="login-day"><div class="day-num">5日目</div><div class="day-reward">💰</div><div class="day-label">-</div></div>
+        <div class="login-day"><div class="day-num">6日目</div><div class="day-reward">💎</div><div class="day-label">-</div></div>
+        <div class="login-day"><div class="day-num">7日目</div><div class="day-reward">👑</div><div class="day-label">-</div></div>
+      </div>
+    </div>
+
+    <!-- Event Banners -->
+    <div class="event-banner event-raid">🔥 レイドイベント「魔王降臨」開催中！ あと2日</div>
+    <div class="event-banner event-collab">🌟 コラボイベント開催中！限定キャラをゲットしよう</div>
+
+    <!-- Battle Record -->
+    <div id="battle-record">
+      <h3>📊 戦績</h3>
+      <div class="record-stats">
+        <div class="record-stat"><div class="stat-value">12</div><div class="stat-label">勝利</div></div>
+        <div class="record-stat"><div class="stat-value">3</div><div class="stat-label">敗北</div></div>
+        <div class="record-stat"><div class="stat-value">5</div><div class="stat-label">最高WAVE</div></div>
+        <div class="record-stat"><div class="stat-value">80%</div><div class="stat-label">勝率</div></div>
+      </div>
+    </div>
+
+    <!-- Daily Missions -->
+    <div id="daily-missions">
+      <h3>📋 デイリーミッション</h3>
+      <div class="mission-item">
+        <span class="mission-icon">⚔️</span>
+        <span class="mission-text">バトルを1回クリアしよう</span>
+        <span class="mission-progress">0/1</span>
+        <span class="mission-reward">💰50</span>
+      </div>
+      <div class="mission-item">
+        <span class="mission-icon">🎰</span>
+        <span class="mission-text">ガチャを3回引こう</span>
+        <span class="mission-progress">0/3</span>
+        <span class="mission-reward">💎5</span>
+      </div>
+      <div class="mission-item">
+        <span class="mission-icon">⬆️</span>
+        <span class="mission-text">キャラをレベルアップしよう</span>
+        <span class="mission-progress">0/1</span>
+        <span class="mission-reward">💰100</span>
+      </div>
+      <div class="mission-item done">
+        <span class="mission-icon">👋</span>
+        <span class="mission-text">ログインボーナスを受け取ろう</span>
+        <span class="mission-progress">1/1</span>
+        <span class="mission-reward">済</span>
+      </div>
+    </div>
+
+    <!-- Achievement Preview -->
+    <div id="achievement-preview">
+      <h3>🏆 実績</h3>
+      <div class="achievement-row">
+        <span class="ach-icon">⚔️</span>
+        <div class="ach-info">
+          <div class="ach-name">百戦錬磨 - 100回バトルしよう</div>
+          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:15%"></div></div>
+        </div>
+        <span class="ach-pct">15/100</span>
+      </div>
+      <div class="achievement-row">
+        <span class="ach-icon">🐉</span>
+        <div class="ach-info">
+          <div class="ach-name">竜の主 - ドラゴンを入手しよう</div>
+          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:0%"></div></div>
+        </div>
+        <span class="ach-pct">0/1</span>
+      </div>
+      <div class="achievement-row">
+        <span class="ach-icon">💰</span>
+        <div class="ach-info">
+          <div class="ach-name">大富豪 - ゴールド10,000貯めよう</div>
+          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:12%"></div></div>
+        </div>
+        <span class="ach-pct">1.2k/10k</span>
+      </div>
+    </div>
+
+    <!-- Friend Activity -->
+    <div id="friend-activity">
+      <h3>👥 フレンド</h3>
+      <div class="friend-row">
+        <span class="friend-avatar">🧑</span>
+        <div class="friend-info"><div class="friend-name">たけし</div><div class="friend-status">WAVE 8 クリア！</div></div>
+        <div class="friend-online on"></div>
+      </div>
+      <div class="friend-row">
+        <span class="friend-avatar">👧</span>
+        <div class="friend-info"><div class="friend-name">さくら</div><div class="friend-status">ランク10に到達</div></div>
+        <div class="friend-online on"></div>
+      </div>
+      <div class="friend-row">
+        <span class="friend-avatar">👦</span>
+        <div class="friend-info"><div class="friend-name">ゆうた</div><div class="friend-status">3時間前にログイン</div></div>
+        <div class="friend-online off"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Level Up Page -->
@@ -298,25 +643,9 @@ canvas { display: block; }
   <div class="menu-page" id="page-gacha">
     <h2>ガチャ</h2>
     <div id="gacha-area">
-      <div id="gacha-machine">
-        <div id="gacha-top"></div>
-        <div id="gacha-globe">
-          <div id="gacha-balls">
-            <span class="gball" style="top:25%;left:20%;background:#f44">●</span>
-            <span class="gball" style="top:40%;left:55%;background:#4af">●</span>
-            <span class="gball" style="top:55%;left:30%;background:#fd0">●</span>
-            <span class="gball" style="top:35%;left:70%;background:#4f4">●</span>
-            <span class="gball" style="top:60%;left:60%;background:#f4f">●</span>
-            <span class="gball" style="top:50%;left:15%;background:#fa0">●</span>
-            <span class="gball" style="top:30%;left:40%;background:#aaf">●</span>
-            <span class="gball" style="top:65%;left:45%;background:#f88">●</span>
-          </div>
-        </div>
-        <div id="gacha-body"></div>
-        <div id="gacha-handle" onclick="doGacha()">
-          <div id="gacha-knob"></div>
-        </div>
-        <div id="gacha-exit"></div>
+      <div id="gacha-wrapper">
+        <img id="gacha-machine" src="ガチャ本体.png" onclick="doGacha()">
+        <img id="gacha-handle-img" src="ガチャハンドル.png" onclick="doGacha()">
       </div>
       <div id="gacha-result"></div>
       <button class="gacha-btn" onclick="doGacha()">ガチャを回す！</button>
@@ -353,16 +682,6 @@ canvas { display: block; }
 <canvas id="game"></canvas>
 
 <div id="info">
-  <div id="hp-container">
-    <div class="hp-bar-wrapper">
-      <span class="hp-label" style="color:#4af">味方基地</span>
-      <div class="hp-bar"><div id="ally-hp" class="hp-bar-fill" style="width:100%;background:#4af"></div></div>
-    </div>
-    <div class="hp-bar-wrapper">
-      <span class="hp-label" style="color:#f44">敵基地</span>
-      <div class="hp-bar"><div id="enemy-hp" class="hp-bar-fill" style="width:100%;background:#f44"></div></div>
-    </div>
-  </div>
   <div id="wave-display">WAVE 1</div>
   <div id="gold-display">💰 100</div>
 </div>
@@ -380,10 +699,7 @@ const ctx = canvas.getContext('2d');
 
 const bgm = new Audio('まいと大戦争１面.mp3');
 bgm.loop = true;
-bgm.volume = 0.5;
-document.addEventListener('click', () => {
-  if (bgm.paused) bgm.play();
-}, { once: true });
+bgm.volume = 0;
 
 const allyCastleImg = new Image();
 allyCastleImg.src = 'ally_castle.png';
@@ -650,8 +966,6 @@ function update(time) {
 
   // Update UI
   document.getElementById('gold-display').textContent = `💰 ${gold}`;
-  document.getElementById('ally-hp').style.width = `${Math.max(0, allyBaseHp / MAX_BASE_HP * 100)}%`;
-  document.getElementById('enemy-hp').style.width = `${Math.max(0, enemyBaseHp / MAX_BASE_HP * 100)}%`;
   updateButtons();
 }
 
@@ -683,6 +997,26 @@ function drawBase(x, gy, isEnemy) {
     }
     ctx.restore();
   }
+  // HP bar above the castle
+  const hp = isEnemy ? enemyBaseHp : allyBaseHp;
+  const hpPct = Math.max(0, hp / MAX_BASE_HP);
+  const barW = 120, barH = 14;
+  const barX = x - barW / 2;
+  const barY = gy - dh + 20;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
+  ctx.fillStyle = '#333';
+  ctx.fillRect(barX, barY, barW, barH);
+  ctx.fillStyle = isEnemy ? '#f44' : '#4af';
+  ctx.fillRect(barX, barY, barW * hpPct, barH);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX, barY, barW, barH);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${Math.max(0, Math.ceil(hp))} / ${MAX_BASE_HP}`, x, barY + barH / 2);
 }
 
 function drawUnit(entity, isEnemy) {
@@ -998,25 +1332,13 @@ function buildShopList() {
 }
 
 function doGacha() {
-  const handle = document.getElementById('gacha-handle');
-  const balls = document.getElementById('gacha-balls');
+  const handle = document.getElementById('gacha-handle-img');
   const resultEl = document.getElementById('gacha-result');
-
   handle.classList.add('turning');
-  balls.style.animation = 'shakeBalls 0.5s ease-in-out';
   resultEl.textContent = '';
-
-  // Shuffle ball positions
-  document.querySelectorAll('.gball').forEach(b => {
-    b.style.top = (20 + Math.random() * 50) + '%';
-    b.style.left = (10 + Math.random() * 70) + '%';
-  });
-
   setTimeout(() => {
     handle.classList.remove('turning');
-    balls.style.animation = '';
-    const allUnits = UNIT_TYPES;
-    const pick = allUnits[Math.floor(Math.random() * allUnits.length)];
+    const pick = UNIT_TYPES[Math.floor(Math.random() * UNIT_TYPES.length)];
     resultEl.innerHTML = `<span style="font-size:50px">${pick.icon}</span><br><span style="font-size:20px;color:white">${pick.name} GET!</span>`;
   }, 600);
 }
@@ -1025,7 +1347,6 @@ function startBattle() {
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('info').style.display = 'flex';
   document.getElementById('ui').style.display = 'flex';
-  if (bgm.paused) bgm.play();
   initGame();
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
@@ -1039,6 +1360,79 @@ document.getElementById('ui').style.display = 'none';
 buildEquipGrid();
 buildLevelUpList();
 buildShopList();
+
+// Mission modal
+const MISSIONS = {
+  daily: [
+    { icon: '⚔️', name: 'バトルを1回クリアしよう', desc: 'どのステージでもOK', progress: 0, goal: 1, reward: '💰 50' },
+    { icon: '🎰', name: 'ガチャを3回引こう', desc: 'チケットでもOK', progress: 0, goal: 3, reward: '💎 5' },
+    { icon: '⬆️', name: 'キャラをレベルアップしよう', desc: 'どのキャラでもOK', progress: 0, goal: 1, reward: '💰 100' },
+    { icon: '👋', name: 'ログインボーナスを受け取ろう', desc: '毎日ログインしよう', progress: 1, goal: 1, reward: '💰 30', claimed: true },
+    { icon: '🛡️', name: '装備を変更しよう', desc: '編成画面でキャラを入れ替え', progress: 0, goal: 1, reward: '💰 50' },
+  ],
+  weekly: [
+    { icon: '⚔️', name: 'バトルを10回クリアしよう', desc: '週間ミッション', progress: 3, goal: 10, reward: '💎 20' },
+    { icon: '🎰', name: 'ガチャを20回引こう', desc: '週間ミッション', progress: 5, goal: 20, reward: '💎 30' },
+    { icon: '🐉', name: 'WAVE 5 に到達しよう', desc: '1回のバトルでWAVE5まで', progress: 0, goal: 1, reward: '🎫 1' },
+    { icon: '💰', name: 'ゴールドを3,000稼ごう', desc: 'バトル報酬で累計', progress: 1200, goal: 3000, reward: '💎 10' },
+  ],
+  achievement: [
+    { icon: '⚔️', name: '百戦錬磨', desc: '100回バトルしよう', progress: 15, goal: 100, reward: '👑 称号' },
+    { icon: '🐉', name: '竜の主', desc: 'ドラゴンを入手しよう', progress: 0, goal: 1, reward: '💎 50' },
+    { icon: '💰', name: '大富豪', desc: 'ゴールド10,000貯めよう', progress: 1200, goal: 10000, reward: '💎 100' },
+    { icon: '🏆', name: '全員集合', desc: '全キャラをガチャで入手', progress: 5, goal: 17, reward: '👑 称号' },
+    { icon: '🔥', name: '無敗の王', desc: '5連勝しよう', progress: 2, goal: 5, reward: '🎫 3' },
+  ]
+};
+let currentMissionTab = 'daily';
+
+function openMissionModal() {
+  document.getElementById('mission-modal-overlay').classList.add('show');
+  renderMissions('daily');
+}
+function closeMissionModal() {
+  document.getElementById('mission-modal-overlay').classList.remove('show');
+}
+function switchMissionTab(tab) {
+  currentMissionTab = tab;
+  document.querySelectorAll('.mission-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderMissions(tab);
+}
+function renderMissions(tab) {
+  const body = document.getElementById('mission-modal-body');
+  const missions = MISSIONS[tab];
+  body.innerHTML = missions.map(m => {
+    const pct = Math.min(100, m.progress / m.goal * 100);
+    const done = m.progress >= m.goal;
+    const claimed = m.claimed;
+    return `<div class="modal-mission-item">
+      <span class="m-icon">${m.icon}</span>
+      <div class="m-info">
+        <div class="m-name">${m.name}</div>
+        <div class="m-desc">${m.desc} (${m.progress}/${m.goal})</div>
+        <div class="m-progress-bar"><div class="m-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="m-reward-btn ${claimed ? 'claimed' : ''}" ${!done ? 'disabled style="opacity:0.4"' : ''}>${claimed ? '受取済' : m.reward}</button>
+    </div>`;
+  }).join('');
+}
 </script>
+
+<!-- Mission Modal -->
+<div id="mission-modal-overlay" onclick="if(event.target===this)closeMissionModal()">
+  <div id="mission-modal">
+    <div id="mission-modal-header">
+      <h2>📋 ミッション</h2>
+      <button id="mission-close-btn" onclick="closeMissionModal()">✕</button>
+    </div>
+    <div id="mission-tabs">
+      <button class="mission-tab active" onclick="switchMissionTab('daily')">デイリー</button>
+      <button class="mission-tab" onclick="switchMissionTab('weekly')">ウィークリー</button>
+      <button class="mission-tab" onclick="switchMissionTab('achievement')">実績</button>
+    </div>
+    <div id="mission-modal-body"></div>
+  </div>
+</div>
 </body>
 </html>
