@@ -168,7 +168,20 @@ canvas { display: block; }
   width: 100%; display: flex; align-items: center; gap: 10px;
   background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
   border: 2px solid #c8a020; border-radius: 4px; padding: 10px 14px;
-  margin-bottom: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+}
+#profile-modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 1000;
+  justify-content: center; align-items: center;
+}
+#profile-modal-overlay.show { display: flex; }
+#profile-modal {
+  width: 80vw; max-width: 350px; aspect-ratio: 1;
+  background: linear-gradient(180deg, #1a1a2a, #0d0d1a);
+  border: 2px solid #ffd700; border-radius: 8px;
+  padding: 20px; display: flex; flex-direction: column; gap: 14px;
+  justify-content: center;
 }
 #player-info .avatar { font-size: 36px; }
 #player-info .details { flex: 1; color: white; }
@@ -226,6 +239,14 @@ canvas { display: block; }
 #stamina-bar-fill {
   height: 100%; width: 80%; background: linear-gradient(90deg, #4f4, #2d2);
   border-radius: 4px;
+}
+
+/* Profile button - top left */
+#profile-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 30;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 24px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 
 /* Mission button - top right of menu-screen */
@@ -478,6 +499,7 @@ canvas { display: block; }
 </head>
 <body>
 <div id="menu-screen">
+  <button id="profile-btn" onclick="toggleProfile()">😤</button>
   <button id="mission-btn" onclick="openMissionModal()">
     <img src="ミッションボタン.png" alt="ミッション">
     <span class="badge">3</span>
@@ -486,20 +508,6 @@ canvas { display: block; }
 
   <!-- Home Page -->
   <div class="menu-page active" id="page-home">
-    <!-- Player Info -->
-    <div id="player-info">
-      <div class="avatar">😤</div>
-      <div class="details">
-        <div class="player-name">まいと</div>
-        <div class="player-rank">ランク 7 ・ 戦闘力 1,250</div>
-        <div class="exp-bar"><div class="exp-bar-fill"></div></div>
-      </div>
-      <div class="currency">
-        <span style="color:#ffd700">💰 1,200</span>
-        <span style="color:#88f">💎 30</span>
-        <span style="color:#f90">🎫 3</span>
-      </div>
-    </div>
 
     <!-- Notice Banner -->
     <div id="notice-banner">
@@ -515,10 +523,6 @@ canvas { display: block; }
       <div id="stamina-bar"><div id="stamina-bar-fill"></div></div>
     </div>
 
-    <div id="equip-section">
-      <h3>装備中のキャラ</h3>
-      <div id="equip-grid"></div>
-    </div>
     <img id="menu-castle" src="ally_castle.png">
     <button id="play-btn" onclick="startBattle()">バトル開始</button>
 
@@ -633,6 +637,14 @@ window.onerror = function(msg, url, line) {
   d.textContent = 'ERROR line ' + line + ': ' + msg;
   document.body.appendChild(d);
 };
+
+function toggleProfile() {
+  document.getElementById('profile-modal-overlay').classList.add('show');
+  updateCurrencyDisplay();
+}
+function closeProfile() {
+  document.getElementById('profile-modal-overlay').classList.remove('show');
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1598,9 +1610,9 @@ function claimReward(tabName, index) {
 }
 
 function updateCurrencyDisplay() {
-  const info = document.getElementById('player-info');
-  if (info) {
-    const spans = info.querySelectorAll('.currency span');
+  const modal = document.getElementById('profile-modal');
+  if (modal) {
+    const spans = modal.querySelectorAll('.currency span');
     if (spans[0]) spans[0].textContent = '💰 ' + playerGold.toLocaleString();
     if (spans[1]) spans[1].textContent = '💎 ' + playerGems;
     if (spans[2]) spans[2].textContent = '🎫 ' + gachaTickets;
@@ -1713,6 +1725,25 @@ try {
       <button class="mission-tab" onclick="switchMissionTab('achievement')">実績</button>
     </div>
     <div id="mission-modal-body"></div>
+  </div>
+</div>
+<!-- Profile Modal -->
+<div id="profile-modal-overlay" onclick="if(event.target===this)closeProfile()">
+  <div id="profile-modal">
+    <div id="player-info">
+      <div class="avatar">😤</div>
+      <div class="details">
+        <div class="player-name">まいと</div>
+        <div class="player-rank">ランク 7 ・ 戦闘力 1,250</div>
+        <div class="exp-bar"><div class="exp-bar-fill"></div></div>
+      </div>
+    </div>
+    <div class="currency" style="display:flex;gap:16px;font-size:16px;font-weight:bold;justify-content:center;">
+      <span style="color:#ffd700">💰 1,200</span>
+      <span style="color:#88f">💎 30</span>
+      <span style="color:#f90">🎫 3</span>
+    </div>
+    <button onclick="closeProfile()" style="width:100%;padding:10px;font-size:14px;">閉じる</button>
   </div>
 </div>
 <div id="toast"></div>
