@@ -7,6 +7,27 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #4a9aea; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+#toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.95); color: #f44; font-size: 22px; font-weight: bold;
+  padding: 20px 40px; border-radius: 8px; border: 3px solid #f44;
+  z-index: 99999; display: none; text-align: center;
+  pointer-events: none;
+}
+@keyframes toastFade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+button {
+  border: 2px solid #ffd700; border-radius: 4px;
+  background: linear-gradient(180deg, #1a1a2a, #2a2a3a);
+  color: #ffd700; cursor: pointer; font-weight: bold;
+  box-shadow: 0 3px 0 #996600, inset 0 0 10px rgba(255,215,0,0.1);
+  transition: all 0.15s;
+}
+button:hover { border-color: #ffe44d; box-shadow: 0 3px 0 #996600, 0 0 10px rgba(255,215,0,0.3); }
+button:active { transform: translateY(2px); box-shadow: 0 1px 0 #996600; }
 canvas { display: block; }
 #ui {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -62,10 +83,8 @@ canvas { display: block; }
 }
 #game-over h1 { font-size: 48px; margin-bottom: 20px; }
 #game-over button {
-  padding: 12px 30px; font-size: 20px; border: none; border-radius: 8px;
-  background: #4a4aff; color: white; cursor: pointer;
+  padding: 12px 30px; font-size: 20px; margin: 6px;
 }
-#game-over button:hover { background: #6a6aff; }
 
 /* Menu Screen */
 #menu-screen {
@@ -86,15 +105,9 @@ canvas { display: block; }
   width: 130px; height: 130px; margin-bottom: 12px;
 }
 #play-btn {
-  padding: 14px 50px; font-size: 24px; border: none; border-radius: 50px;
-  background: linear-gradient(180deg, #ff6b6b, #ee4444);
-  color: white; cursor: pointer; font-weight: bold;
-  box-shadow: 0 4px 0 #bb2222;
-  transition: all 0.15s;
+  padding: 14px 50px; font-size: 24px; border-radius: 4px;
   margin-bottom: 16px;
 }
-#play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #bb2222; }
-#play-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bb2222; }
 
 /* Equip grid */
 #equip-section {
@@ -104,9 +117,16 @@ canvas { display: block; }
   color: white; font-size: 16px; margin-bottom: 10px; text-align: center;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
 }
-#equip-grid {
+#equip-grid, #equip-grid-page {
   display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr);
   gap: 8px;
+}
+#equip-section-page {
+  width: 100%; max-width: 600px; padding: 10px 20px;
+}
+#equip-section-page h3 {
+  color: white; font-size: 16px; margin-bottom: 10px; text-align: center;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
 }
 .equip-card {
   height: 80px; background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
@@ -127,13 +147,10 @@ canvas { display: block; }
 }
 .nav-btn {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 10px 4px; cursor: pointer;
-  border: 3px solid #c8a020; background: #1a1a1a; transition: all 0.15s;
-  gap: 2px; margin: 4px; border-radius: 4px;
-  box-shadow: inset 0 0 8px rgba(200,160,32,0.3), 0 2px 4px rgba(0,0,0,0.3);
+  justify-content: center; padding: 10px 4px;
+  gap: 2px; margin: 4px;
 }
-.nav-btn:hover { border-color: #ffd700; box-shadow: inset 0 0 12px rgba(255,215,0,0.4), 0 0 8px rgba(255,215,0,0.3); }
-.nav-btn.active { border-color: #ffd700; background: #2a2a2a; box-shadow: inset 0 0 15px rgba(255,215,0,0.3), 0 0 10px rgba(255,215,0,0.4); }
+.nav-btn.active { background: #2a2a2a; box-shadow: 0 3px 0 #996600, 0 0 10px rgba(255,215,0,0.4); }
 .nav-btn .nav-icon { font-size: 24px; }
 .nav-btn .nav-label { font-size: 11px; color: #fff; font-weight: bold; }
 .nav-btn.active .nav-label { color: #fff; }
@@ -144,7 +161,7 @@ canvas { display: block; }
   justify-content: flex-start; width: 100%; max-width: 600px;
   padding: 20px; overflow-y: auto; min-height: 0;
 }
-#page-home { overflow-y: auto; }
+#page-home { overflow-y: auto; justify-content: center; }
 
 /* Player info bar */
 #player-info {
@@ -215,7 +232,7 @@ canvas { display: block; }
 #mission-btn {
   position: fixed; top: 16px; right: 116px; z-index: 30;
   background: none; border: none; padding: 0; cursor: pointer;
-  width: 100px; height: 100px;
+  width: 100px; height: 100px; box-shadow: none;
 }
 #mission-btn img { width: 100%; height: 100%; object-fit: contain; }
 #mission-btn:hover { transform: scale(1.1); }
@@ -245,21 +262,20 @@ canvas { display: block; }
 }
 #mission-modal-header h2 { color: #c080ff; font-size: 20px; margin: 0; }
 #mission-close-btn {
-  background: none; border: 1px solid #666; color: #aaa; font-size: 18px;
-  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  font-size: 18px; width: 32px; height: 32px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
+  padding: 0;
 }
-#mission-close-btn:hover { border-color: #fff; color: #fff; }
 #mission-tabs {
   display: flex; border-bottom: 1px solid #333;
 }
 .mission-tab {
-  flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold;
-  color: #888; background: none; border: none; cursor: pointer;
+  flex: 1; padding: 10px; text-align: center; font-size: 13px;
+  border-radius: 0; box-shadow: none;
   border-bottom: 2px solid transparent;
 }
-.mission-tab.active { color: #c080ff; border-bottom-color: #c080ff; }
-.mission-tab:hover { color: #d0a0ff; }
+.mission-tab.active { border-bottom-color: #ffd700; background: #2a2a3a; }
+.mission-tab:hover { box-shadow: none; }
 #mission-modal-body {
   padding: 12px 16px; overflow-y: auto; flex: 1;
 }
@@ -390,13 +406,8 @@ canvas { display: block; }
 .levelup-card .info .name { font-size: 16px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .levelup-card .info .stats { font-size: 12px; color: #aaa; margin-top: 2px; }
 .levelup-btn {
-  padding: 10px 18px; border: 2px solid #ffd700; border-radius: 4px;
-  background: linear-gradient(180deg, #44dd44, #22aa22);
-  color: white; font-weight: bold; font-size: 14px; cursor: pointer;
-  box-shadow: 0 3px 0 #117711; transition: all 0.1s;
+  padding: 10px 18px; font-size: 14px;
 }
-.levelup-btn:hover { background: linear-gradient(180deg, #55ee55, #33bb33); transform: translateY(-1px); }
-.levelup-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #117711; }
 
 /* Gacha page */
 #page-gacha {
@@ -407,16 +418,9 @@ canvas { display: block; }
   text-align: center; width: 100%;
 }
 .gacha-btn {
-  padding: 12px 32px; font-size: 18px; border: 3px solid #ffd700;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #1a1a2a, #2a2a3a);
-  color: #ffd700; font-weight: bold; cursor: pointer;
-  box-shadow: 0 4px 0 #996600, inset 0 0 15px rgba(255,215,0,0.1); margin: 20px;
-  transition: all 0.15s;
+  padding: 12px 32px; font-size: 18px; margin: 20px;
   touch-action: none;
 }
-.gacha-btn:hover { background: linear-gradient(180deg, #2a2a3a, #3a3a4a); box-shadow: 0 4px 0 #996600, 0 0 12px rgba(255,215,0,0.3); }
-.gacha-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #996600; }
 #gacha-wrapper {
   position: relative; display: inline-block; margin: 0 auto 20px;
   width: 280px;
@@ -461,23 +465,15 @@ canvas { display: block; }
 .shop-item .info .name { font-size: 16px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .shop-item .info .desc { font-size: 12px; color: #aaa; margin-top: 2px; }
 .buy-btn {
-  padding: 10px 18px; border: 2px solid #ffd700; border-radius: 4px;
-  background: linear-gradient(180deg, #ffd700, #cc9900);
-  color: #1a1a1a; font-weight: bold; font-size: 13px; cursor: pointer;
-  box-shadow: 0 3px 0 #996600; transition: all 0.1s;
+  padding: 10px 18px; font-size: 13px;
 }
-.buy-btn:hover { background: linear-gradient(180deg, #ffe44d, #ddaa00); transform: translateY(-1px); }
-.buy-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #996600; }
 #shop-tabs {
   display: flex; gap: 8px; margin-bottom: 16px; width: 100%;
 }
 .shop-tab {
-  flex: 1; padding: 10px 8px; border: 2px solid #c8a020; border-radius: 4px;
-  background: #1a1a1a; color: #fff; font-size: 13px; font-weight: bold;
-  cursor: pointer; transition: all 0.15s;
+  flex: 1; padding: 10px 8px; font-size: 13px;
 }
-.shop-tab:hover { border-color: #ffd700; }
-.shop-tab.active { background: #2a2a2a; border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+.shop-tab.active { background: #2a2a2a; box-shadow: 0 3px 0 #996600, 0 0 8px rgba(255,215,0,0.4); }
 </style>
 </head>
 <body>
@@ -501,6 +497,7 @@ canvas { display: block; }
       <div class="currency">
         <span style="color:#ffd700">💰 1,200</span>
         <span style="color:#88f">💎 30</span>
+        <span style="color:#f90">🎫 3</span>
       </div>
     </div>
 
@@ -529,10 +526,10 @@ canvas { display: block; }
     <div id="login-bonus">
       <h3>🎁 ログインボーナス</h3>
       <div class="login-days">
-        <div class="login-day claimed"><div class="day-num">1日目</div><div class="day-reward">💰</div><div class="day-label">済</div></div>
-        <div class="login-day claimed"><div class="day-num">2日目</div><div class="day-reward">💰</div><div class="day-label">済</div></div>
-        <div class="login-day claimed"><div class="day-num">3日目</div><div class="day-reward">💎</div><div class="day-label">済</div></div>
-        <div class="login-day today"><div class="day-num">4日目</div><div class="day-reward">🎫</div><div class="day-label">今日!</div></div>
+        <div class="login-day today"><div class="day-num">1日目</div><div class="day-reward">💰</div><div class="day-label">今日!</div></div>
+        <div class="login-day"><div class="day-num">2日目</div><div class="day-reward">💰</div><div class="day-label">-</div></div>
+        <div class="login-day"><div class="day-num">3日目</div><div class="day-reward">💎</div><div class="day-label">-</div></div>
+        <div class="login-day"><div class="day-num">4日目</div><div class="day-reward">🎫</div><div class="day-label">-</div></div>
         <div class="login-day"><div class="day-num">5日目</div><div class="day-reward">💰</div><div class="day-label">-</div></div>
         <div class="login-day"><div class="day-num">6日目</div><div class="day-reward">💎</div><div class="day-label">-</div></div>
         <div class="login-day"><div class="day-num">7日目</div><div class="day-reward">👑</div><div class="day-label">-</div></div>
@@ -540,96 +537,15 @@ canvas { display: block; }
     </div>
 
     <!-- Event Banners -->
-    <div class="event-banner event-raid">🔥 レイドイベント「魔王降臨」開催中！ あと2日</div>
-    <div class="event-banner event-collab">🌟 コラボイベント開催中！限定キャラをゲットしよう</div>
 
-    <!-- Battle Record -->
-    <div id="battle-record">
-      <h3>📊 戦績</h3>
-      <div class="record-stats">
-        <div class="record-stat"><div class="stat-value">12</div><div class="stat-label">勝利</div></div>
-        <div class="record-stat"><div class="stat-value">3</div><div class="stat-label">敗北</div></div>
-        <div class="record-stat"><div class="stat-value">5</div><div class="stat-label">最高WAVE</div></div>
-        <div class="record-stat"><div class="stat-value">80%</div><div class="stat-label">勝率</div></div>
-      </div>
-    </div>
+  </div>
 
-    <!-- Daily Missions -->
-    <div id="daily-missions">
-      <h3>📋 デイリーミッション</h3>
-      <div class="mission-item">
-        <span class="mission-icon">⚔️</span>
-        <span class="mission-text">バトルを1回クリアしよう</span>
-        <span class="mission-progress">0/1</span>
-        <span class="mission-reward">💰50</span>
-      </div>
-      <div class="mission-item">
-        <span class="mission-icon">🎰</span>
-        <span class="mission-text">ガチャを3回引こう</span>
-        <span class="mission-progress">0/3</span>
-        <span class="mission-reward">💎5</span>
-      </div>
-      <div class="mission-item">
-        <span class="mission-icon">⬆️</span>
-        <span class="mission-text">キャラをレベルアップしよう</span>
-        <span class="mission-progress">0/1</span>
-        <span class="mission-reward">💰100</span>
-      </div>
-      <div class="mission-item done">
-        <span class="mission-icon">👋</span>
-        <span class="mission-text">ログインボーナスを受け取ろう</span>
-        <span class="mission-progress">1/1</span>
-        <span class="mission-reward">済</span>
-      </div>
-    </div>
-
-    <!-- Achievement Preview -->
-    <div id="achievement-preview">
-      <h3>🏆 実績</h3>
-      <div class="achievement-row">
-        <span class="ach-icon">⚔️</span>
-        <div class="ach-info">
-          <div class="ach-name">百戦錬磨 - 100回バトルしよう</div>
-          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:15%"></div></div>
-        </div>
-        <span class="ach-pct">15/100</span>
-      </div>
-      <div class="achievement-row">
-        <span class="ach-icon">🐉</span>
-        <div class="ach-info">
-          <div class="ach-name">竜の主 - ドラゴンを入手しよう</div>
-          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:0%"></div></div>
-        </div>
-        <span class="ach-pct">0/1</span>
-      </div>
-      <div class="achievement-row">
-        <span class="ach-icon">💰</span>
-        <div class="ach-info">
-          <div class="ach-name">大富豪 - ゴールド10,000貯めよう</div>
-          <div class="ach-progress-bar"><div class="ach-progress-fill" style="width:12%"></div></div>
-        </div>
-        <span class="ach-pct">1.2k/10k</span>
-      </div>
-    </div>
-
-    <!-- Friend Activity -->
-    <div id="friend-activity">
-      <h3>👥 フレンド</h3>
-      <div class="friend-row">
-        <span class="friend-avatar">🧑</span>
-        <div class="friend-info"><div class="friend-name">たけし</div><div class="friend-status">WAVE 8 クリア！</div></div>
-        <div class="friend-online on"></div>
-      </div>
-      <div class="friend-row">
-        <span class="friend-avatar">👧</span>
-        <div class="friend-info"><div class="friend-name">さくら</div><div class="friend-status">ランク10に到達</div></div>
-        <div class="friend-online on"></div>
-      </div>
-      <div class="friend-row">
-        <span class="friend-avatar">👦</span>
-        <div class="friend-info"><div class="friend-name">ゆうた</div><div class="friend-status">3時間前にログイン</div></div>
-        <div class="friend-online off"></div>
-      </div>
+  <!-- Equip Page -->
+  <div class="menu-page" id="page-equip">
+    <h2>装備</h2>
+    <div id="equip-section-page">
+      <h3>装備中のキャラ（6体まで）</h3>
+      <div id="equip-grid-page"></div>
     </div>
   </div>
 
@@ -648,7 +564,8 @@ canvas { display: block; }
         <img id="gacha-handle-img" src="ガチャハンドル.png" onclick="doGacha()">
       </div>
       <div id="gacha-result"></div>
-      <button class="gacha-btn" onclick="doGacha()">ガチャを回す！</button>
+      <button class="gacha-btn" onclick="doGacha()">ガチャを回す！（💎5）</button>
+      <button class="gacha-btn" onclick="doGachaTicket()" style="font-size:14px;margin-top:4px;">🎫 チケットで回す</button>
     </div>
   </div>
 
@@ -664,11 +581,14 @@ canvas { display: block; }
   </div>
 
   <div id="bottom-nav">
-    <button class="nav-btn active" onclick="showPage('home')">
-      <span class="nav-icon">🏠</span><span class="nav-label">ホーム</span>
+    <button class="nav-btn" onclick="showPage('equip')">
+      <span class="nav-icon">🛡️</span><span class="nav-label">装備</span>
     </button>
     <button class="nav-btn" onclick="showPage('levelup')">
       <span class="nav-icon">⬆️</span><span class="nav-label">レベルUP</span>
+    </button>
+    <button class="nav-btn active" onclick="showPage('home')">
+      <span class="nav-icon">🏠</span><span class="nav-label">ホーム</span>
     </button>
     <button class="nav-btn" onclick="showPage('gacha')">
       <span class="nav-icon">🎰</span><span class="nav-label">ガチャ</span>
@@ -691,9 +611,20 @@ canvas { display: block; }
 <div id="game-over">
   <h1 id="result-text"></h1>
   <button onclick="restartGame()">もう一度</button>
+  <button onclick="backToMenu()">ホームに戻る</button>
 </div>
 
 <script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.animation = 'none';
+  t.offsetHeight;
+  t.style.animation = 'toastFade 1.5s ease-out forwards';
+  setTimeout(() => { t.style.display = 'none'; }, 1500);
+}
+
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
@@ -755,6 +686,8 @@ const ENEMY_TYPES = [
 
 let gold, allyBaseHp, enemyBaseHp, wave, units, enemies, projectiles, particles;
 let goldTimer, waveTimer, gameOver, cooldowns, enemySpawnQueue;
+// Equipped units (max 6)
+let equippedUnits = UNIT_TYPES.slice(0, 6);
 const MAX_BASE_HP = 1000;
 
 function initGame() {
@@ -975,12 +908,38 @@ function endGame(won) {
   overlay.style.display = 'flex';
   document.getElementById('result-text').textContent = won ? '🎉 勝利！' : '💀 敗北...';
   document.getElementById('result-text').style.color = won ? '#4f4' : '#f44';
+  if (won) {
+    advanceMission('d_battle', 1);
+    advanceMission('w_battle', 1);
+    advanceMission('a_battle', 1);
+    totalBattles++;
+    winStreak++;
+    setMissionProgress('a_winstreak', winStreak);
+    totalGoldEarned += gold;
+    setMissionProgress('w_gold', totalGoldEarned);
+    setMissionProgress('a_rich', totalGoldEarned);
+  } else {
+    winStreak = 0;
+    setMissionProgress('a_winstreak', 0);
+  }
+  if (wave >= 5) setMissionProgress('w_wave', 1);
 }
 
 function restartGame() {
+  document.getElementById('game-over').style.display = 'none';
   initGame();
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
+}
+
+function backToMenu() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('info').style.display = 'none';
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('menu-screen').style.display = 'flex';
+  gameOver = true;
+  updateHomeMissions();
+  updateMissionBadge();
 }
 
 function drawBase(x, gy, isEnemy) {
@@ -1200,26 +1159,31 @@ function gameLoop(time) {
   requestAnimationFrame(gameLoop);
 }
 
-// Build UI buttons
-const uiContainer = document.getElementById('ui');
-UNIT_TYPES.forEach(type => {
-  const btn = document.createElement('div');
-  btn.className = 'unit-btn';
-  btn.id = `btn-${type.id}`;
-  btn.innerHTML = `
-    <span class="icon">${type.icon}</span>
-    <span class="name">${type.name}</span>
-    <span class="cost">💰${type.cost}</span>
-    <div class="cooldown-overlay" id="cd-${type.id}"></div>
-  `;
-  btn.addEventListener('click', () => spawnUnit(type));
-  uiContainer.appendChild(btn);
-});
+// Build UI buttons from equipped units
+function buildBattleUI() {
+  const uiContainer = document.getElementById('ui');
+  uiContainer.innerHTML = '';
+  equippedUnits.forEach(type => {
+    const btn = document.createElement('div');
+    btn.className = 'unit-btn';
+    btn.id = `btn-${type.id}`;
+    btn.innerHTML = `
+      <span class="icon">${type.icon}</span>
+      <span class="name">${type.name}</span>
+      <span class="cost">💰${type.cost}</span>
+      <div class="cooldown-overlay" id="cd-${type.id}"></div>
+    `;
+    btn.addEventListener('click', () => spawnUnit(type));
+    uiContainer.appendChild(btn);
+  });
+}
+buildBattleUI();
 
 function updateButtons() {
-  UNIT_TYPES.forEach(type => {
+  equippedUnits.forEach(type => {
     const btn = document.getElementById(`btn-${type.id}`);
     const cd = document.getElementById(`cd-${type.id}`);
+    if (!btn || !cd) return;
     const canAfford = gold >= type.cost && cooldowns[type.id] <= 0;
     btn.classList.toggle('disabled', !canAfford);
     const cdRatio = cooldowns[type.id] / type.cooldown;
@@ -1232,22 +1196,93 @@ function showPage(name) {
   document.querySelectorAll('.menu-page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  document.querySelectorAll('.nav-btn')[['home','levelup','gacha','shop'].indexOf(name)].classList.add('active');
+  document.querySelectorAll('.nav-btn')[['equip','levelup','home','gacha','shop'].indexOf(name)].classList.add('active');
+  if (name === 'equip') buildEquipGridPage();
 }
+
+let equipSelectMode = false;
+let equipSelectSlot = -1;
 
 function buildEquipGrid() {
   const grid = document.getElementById('equip-grid');
+  if (!grid) return;
   grid.innerHTML = '';
   for (let i = 0; i < 6; i++) {
     const card = document.createElement('div');
-    if (i < UNIT_TYPES.length) {
+    if (i < equippedUnits.length) {
+      const u = equippedUnits[i];
       card.className = 'equip-card';
-      card.innerHTML = `<span class="icon">${UNIT_TYPES[i].icon}</span><span class="name">${UNIT_TYPES[i].name}</span>`;
+      card.innerHTML = `<span class="icon">${u.icon}</span><span class="name">${u.name}</span>`;
+      card.onclick = () => openEquipSelect(i);
     } else {
       card.className = 'equip-card empty';
+      card.onclick = () => openEquipSelect(i);
     }
     grid.appendChild(card);
   }
+}
+
+function buildEquipGridPage() {
+  const grid = document.getElementById('equip-grid-page');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const card = document.createElement('div');
+    if (i < equippedUnits.length) {
+      const u = equippedUnits[i];
+      card.className = 'equip-card';
+      card.innerHTML = `<span class="icon">${u.icon}</span><span class="name">${u.name}</span>`;
+      card.onclick = () => { openEquipSelect(i); };
+    } else {
+      card.className = 'equip-card empty';
+      card.onclick = () => { openEquipSelect(i); };
+    }
+    grid.appendChild(card);
+  }
+}
+
+function openEquipSelect(slot) {
+  equipSelectSlot = slot;
+  const existing = document.getElementById('equip-select-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'equip-select-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'width:90%;max-width:400px;max-height:70vh;background:#1a1a2a;border:2px solid #ffd700;border-radius:8px;overflow-y:auto;padding:12px;';
+
+  let html = '<h3 style="color:#ffd700;text-align:center;margin-bottom:10px;">キャラを選択</h3>';
+  UNIT_TYPES.forEach((u, i) => {
+    const isEquipped = equippedUnits.includes(u);
+    html += `<div onclick="selectEquip(${i})" style="display:flex;align-items:center;gap:10px;padding:8px;margin:4px 0;border:1px solid ${isEquipped ? '#555' : '#ffd700'};border-radius:4px;cursor:pointer;background:${isEquipped ? '#111' : '#1a1a2a'};opacity:${isEquipped ? '0.4' : '1'};">
+      <span style="font-size:28px">${u.icon}</span>
+      <div style="flex:1;color:white;"><div style="font-weight:bold;font-size:13px">${u.name}</div><div style="font-size:11px;color:#aaa">HP:${u.hp} ATK:${u.atk}</div></div>
+      ${isEquipped ? '<span style="color:#888;font-size:11px">装備中</span>' : ''}
+    </div>`;
+  });
+  html += `<button onclick="document.getElementById('equip-select-modal').remove()" style="width:100%;padding:10px;margin-top:8px;font-size:14px;">閉じる</button>`;
+  modal.innerHTML = html;
+  overlay.appendChild(modal);
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+function selectEquip(unitIndex) {
+  const unit = UNIT_TYPES[unitIndex];
+  if (equippedUnits.includes(unit)) return;
+  if (equipSelectSlot < equippedUnits.length) {
+    equippedUnits[equipSelectSlot] = unit;
+  } else {
+    equippedUnits.push(unit);
+  }
+  document.getElementById('equip-select-modal').remove();
+  buildEquipGrid();
+  buildEquipGridPage();
+  buildBattleUI();
+  advanceMission('d_equip', 1);
+  saveGame();
 }
 
 function buildLevelUpList() {
@@ -1278,30 +1313,32 @@ function levelUp(index) {
   u.hp = Math.floor(u.hp * 1.15);
   u.atk = Math.floor(u.atk * 1.1);
   buildLevelUpList();
+  advanceMission('d_levelup', 1);
+  saveGame();
 }
 
 const SHOP_ITEMS = {
   gold: [
-    { icon: '💰', name: 'ゴールドパックS', desc: '100ゴールド獲得', price: '無料' },
-    { icon: '💰', name: 'ゴールドパックM', desc: '500ゴールド獲得', price: '200G' },
-    { icon: '💰', name: 'ゴールドパックL', desc: '2000ゴールド獲得', price: '700G' },
+    { icon: '💰', name: 'ゴールドパックS', desc: '100ゴールド獲得', price: 0, goldGain: 100 },
+    { icon: '💰', name: 'ゴールドパックM', desc: '500ゴールド獲得', price: 200, goldGain: 500 },
+    { icon: '💰', name: 'ゴールドパックL', desc: '2000ゴールド獲得', price: 700, goldGain: 2000 },
   ],
   gem: [
-    { icon: '💎', name: 'ジェム×10', desc: 'ジェム10個', price: '100G' },
-    { icon: '💎', name: 'ジェム×50', desc: 'ジェム50個', price: '450G' },
-    { icon: '💎', name: 'ジェム×120', desc: 'ジェム120個+ボーナス20', price: '900G' },
-    { icon: '💎', name: 'ジェム×300', desc: 'ジェム300個+ボーナス80', price: '2000G' },
-    { icon: '💎', name: 'ジェム×600', desc: 'ジェム600個+ボーナス200', price: '3500G' },
-    { icon: '🌟', name: '初回限定パック', desc: 'ジェム200+★5確定チケ', price: '500G' },
+    { icon: '💎', name: 'ジェム×10', desc: 'ジェム10個', price: 100, gemGain: 10 },
+    { icon: '💎', name: 'ジェム×50', desc: 'ジェム50個', price: 450, gemGain: 50 },
+    { icon: '💎', name: 'ジェム×120', desc: 'ジェム120個+ボーナス20', price: 900, gemGain: 140 },
+    { icon: '💎', name: 'ジェム×300', desc: 'ジェム300個+ボーナス80', price: 2000, gemGain: 380 },
+    { icon: '💎', name: 'ジェム×600', desc: 'ジェム600個+ボーナス200', price: 3500, gemGain: 800 },
+    { icon: '🌟', name: '初回限定パック', desc: 'ジェム200+チケット1枚', price: 500, gemGain: 200, ticketGain: 1 },
   ],
   ticket: [
-    { icon: '🎫', name: 'ノーマルチケット', desc: 'ガチャ1回', price: '50G' },
-    { icon: '🎫', name: 'ノーマルチケット×5', desc: 'ガチャ5回', price: '230G' },
-    { icon: '🎫', name: 'ノーマルチケット×11', desc: 'ガチャ11回(1回おまけ)', price: '450G' },
-    { icon: '🎟️', name: 'レアチケット', desc: '★3以上確定ガチャ', price: '200G' },
-    { icon: '🎟️', name: 'レアチケット×5', desc: '★3以上確定×5', price: '900G' },
-    { icon: '🌟', name: '★5確定チケット', desc: '★5キャラ確定', price: '1500G' },
-    { icon: '🎁', name: 'お得パック', desc: 'ノーマル×10+レア×3', price: '1000G' },
+    { icon: '🎫', name: 'ノーマルチケット', desc: 'ガチャ1回', price: 50, ticketGain: 1 },
+    { icon: '🎫', name: 'ノーマルチケット×5', desc: 'ガチャ5回', price: 230, ticketGain: 5 },
+    { icon: '🎫', name: 'ノーマルチケット×11', desc: 'ガチャ11回(1回おまけ)', price: 450, ticketGain: 11 },
+    { icon: '🎟️', name: 'レアチケット', desc: 'ガチャ1回', price: 200, ticketGain: 1 },
+    { icon: '🎟️', name: 'レアチケット×5', desc: 'ガチャ5回分', price: 900, ticketGain: 5 },
+    { icon: '🌟', name: '★5確定チケット', desc: 'ガチャ1回', price: 1500, ticketGain: 1 },
+    { icon: '🎁', name: 'お得パック', desc: 'チケット13枚', price: 1000, ticketGain: 13 },
   ],
 };
 let currentShopTab = 'gold';
@@ -1316,22 +1353,61 @@ function showShopTab(tab) {
 function buildShopList() {
   const list = document.getElementById('shop-list');
   list.innerHTML = '';
-  SHOP_ITEMS[currentShopTab].forEach(item => {
+  SHOP_ITEMS[currentShopTab].forEach((item, i) => {
     const el = document.createElement('div');
     el.className = 'shop-item';
+    const priceLabel = item.price === 0 ? '無料' : '💰' + item.price;
+    const canAfford = item.price === 0 || playerGold >= item.price;
     el.innerHTML = `
       <span class="icon">${item.icon}</span>
       <div class="info">
         <div class="name">${item.name}</div>
         <div class="desc">${item.desc}</div>
       </div>
-      <button class="buy-btn">${item.price}</button>
+      <button class="buy-btn" onclick="buyItem('${currentShopTab}',${i})" ${!canAfford ? 'style="opacity:0.5"' : ''}>${priceLabel}</button>
     `;
     list.appendChild(el);
   });
 }
 
+function buyItem(tab, index) {
+  const item = SHOP_ITEMS[tab][index];
+  if (item.price > 0 && playerGold < item.price) {
+    showToast('ゴールドが足りません！');
+    return;
+  }
+  playerGold -= item.price;
+  if (item.goldGain) playerGold += item.goldGain;
+  if (item.gemGain) playerGems += item.gemGain;
+  if (item.ticketGain) gachaTickets += item.ticketGain;
+  updateCurrencyDisplay();
+  buildShopList();
+  saveGame();
+}
+
+const GACHA_COST = 5; // ジェム5個
+
+function doGachaTicket() {
+  if (gachaTickets <= 0) {
+    showToast('チケットがありません！');
+    return;
+  }
+  gachaTickets--;
+  updateCurrencyDisplay();
+  doGachaRoll();
+}
+
 function doGacha() {
+  if (playerGems < GACHA_COST) {
+    showToast('ジェムが足りません！（必要: 💎' + GACHA_COST + '）');
+    return;
+  }
+  playerGems -= GACHA_COST;
+  updateCurrencyDisplay();
+  doGachaRoll();
+}
+
+function doGachaRoll() {
   const handle = document.getElementById('gacha-handle-img');
   const resultEl = document.getElementById('gacha-result');
   handle.classList.add('turning');
@@ -1340,13 +1416,27 @@ function doGacha() {
     handle.classList.remove('turning');
     const pick = UNIT_TYPES[Math.floor(Math.random() * UNIT_TYPES.length)];
     resultEl.innerHTML = `<span style="font-size:50px">${pick.icon}</span><br><span style="font-size:20px;color:white">${pick.name} GET!</span>`;
+    advanceMission('d_gacha', 1);
+    advanceMission('w_gacha', 1);
+    collectedChars.add(pick.id);
+    setMissionProgress('a_collect', collectedChars.size);
+    if (pick.id === 'dragon') setMissionProgress('a_dragon', 1);
+    saveGame();
   }, 600);
 }
 
 function startBattle() {
+  if (stamina < STAMINA_COST) {
+    showToast('スタミナが足りません！');
+    return;
+  }
+  stamina -= STAMINA_COST;
+  updateStaminaDisplay();
+  saveGame();
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('info').style.display = 'flex';
   document.getElementById('ui').style.display = 'flex';
+  buildBattleUI();
   initGame();
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
@@ -1361,33 +1451,199 @@ buildEquipGrid();
 buildLevelUpList();
 buildShopList();
 
-// Mission modal
+// Mission system
 const MISSIONS = {
   daily: [
-    { icon: '⚔️', name: 'バトルを1回クリアしよう', desc: 'どのステージでもOK', progress: 0, goal: 1, reward: '💰 50' },
-    { icon: '🎰', name: 'ガチャを3回引こう', desc: 'チケットでもOK', progress: 0, goal: 3, reward: '💎 5' },
-    { icon: '⬆️', name: 'キャラをレベルアップしよう', desc: 'どのキャラでもOK', progress: 0, goal: 1, reward: '💰 100' },
-    { icon: '👋', name: 'ログインボーナスを受け取ろう', desc: '毎日ログインしよう', progress: 1, goal: 1, reward: '💰 30', claimed: true },
-    { icon: '🛡️', name: '装備を変更しよう', desc: '編成画面でキャラを入れ替え', progress: 0, goal: 1, reward: '💰 50' },
+    { id: 'd_battle', icon: '⚔️', name: 'バトルを1回クリアしよう', desc: 'どのステージでもOK', progress: 0, goal: 1, reward: '💰 50', rewardGold: 50 },
+    { id: 'd_gacha', icon: '🎰', name: 'ガチャを3回引こう', desc: 'チケットでもOK', progress: 0, goal: 3, reward: '💎 5', rewardGem: 5 },
+    { id: 'd_levelup', icon: '⬆️', name: 'キャラをレベルアップしよう', desc: 'どのキャラでもOK', progress: 0, goal: 1, reward: '💰 100', rewardGold: 100 },
+    { id: 'd_login', icon: '👋', name: 'ログインボーナスを受け取ろう', desc: '毎日ログインしよう', progress: 1, goal: 1, reward: '💰 30', rewardGold: 30 },
+    { id: 'd_equip', icon: '🛡️', name: '装備を変更しよう', desc: '編成画面でキャラを入れ替え', progress: 0, goal: 1, reward: '💰 50', rewardGold: 50 },
   ],
   weekly: [
-    { icon: '⚔️', name: 'バトルを10回クリアしよう', desc: '週間ミッション', progress: 3, goal: 10, reward: '💎 20' },
-    { icon: '🎰', name: 'ガチャを20回引こう', desc: '週間ミッション', progress: 5, goal: 20, reward: '💎 30' },
-    { icon: '🐉', name: 'WAVE 5 に到達しよう', desc: '1回のバトルでWAVE5まで', progress: 0, goal: 1, reward: '🎫 1' },
-    { icon: '💰', name: 'ゴールドを3,000稼ごう', desc: 'バトル報酬で累計', progress: 1200, goal: 3000, reward: '💎 10' },
+    { id: 'w_battle', icon: '⚔️', name: 'バトルを10回クリアしよう', desc: '週間ミッション', progress: 0, goal: 10, reward: '💎 20', rewardGem: 20 },
+    { id: 'w_gacha', icon: '🎰', name: 'ガチャを20回引こう', desc: '週間ミッション', progress: 0, goal: 20, reward: '💎 30', rewardGem: 30 },
+    { id: 'w_wave', icon: '🐉', name: 'WAVE 5 に到達しよう', desc: '1回のバトルでWAVE5まで', progress: 0, goal: 1, reward: '🎫 1', rewardGem: 10 },
+    { id: 'w_gold', icon: '💰', name: 'ゴールドを3,000稼ごう', desc: 'バトル報酬で累計', progress: 0, goal: 3000, reward: '💎 10', rewardGem: 10 },
   ],
   achievement: [
-    { icon: '⚔️', name: '百戦錬磨', desc: '100回バトルしよう', progress: 15, goal: 100, reward: '👑 称号' },
-    { icon: '🐉', name: '竜の主', desc: 'ドラゴンを入手しよう', progress: 0, goal: 1, reward: '💎 50' },
-    { icon: '💰', name: '大富豪', desc: 'ゴールド10,000貯めよう', progress: 1200, goal: 10000, reward: '💎 100' },
-    { icon: '🏆', name: '全員集合', desc: '全キャラをガチャで入手', progress: 5, goal: 17, reward: '👑 称号' },
-    { icon: '🔥', name: '無敗の王', desc: '5連勝しよう', progress: 2, goal: 5, reward: '🎫 3' },
+    { id: 'a_battle', icon: '⚔️', name: '百戦錬磨', desc: '100回バトルしよう', progress: 0, goal: 100, reward: '👑 称号', rewardGem: 50 },
+    { id: 'a_dragon', icon: '🐉', name: '竜の主', desc: 'ドラゴンを入手しよう', progress: 0, goal: 1, reward: '💎 50', rewardGem: 50 },
+    { id: 'a_rich', icon: '💰', name: '大富豪', desc: 'ゴールド10,000貯めよう', progress: 0, goal: 10000, reward: '💎 100', rewardGem: 100 },
+    { id: 'a_collect', icon: '🏆', name: '全員集合', desc: '全キャラをガチャで入手', progress: 0, goal: 17, reward: '👑 称号', rewardGem: 100 },
+    { id: 'a_winstreak', icon: '🔥', name: '無敗の王', desc: '5連勝しよう', progress: 0, goal: 5, reward: '🎫 3', rewardGem: 30 },
   ]
 };
 let currentMissionTab = 'daily';
+let playerGems = 30;
+let playerGold = 1200;
+let stamina = 40;
+const MAX_STAMINA = 50;
+const STAMINA_COST = 5;
+let gachaTickets = 3;
+let totalGoldEarned = 0;
+let winStreak = 0;
+let totalBattles = 0;
+let collectedChars = new Set();
+
+function saveGame() {
+  const missionState = {};
+  for (const [tab, list] of Object.entries(MISSIONS)) {
+    missionState[tab] = list.map(m => ({ id: m.id, progress: m.progress, claimed: !!m.claimed }));
+  }
+  const data = {
+    playerGems, playerGold, stamina, gachaTickets,
+    totalGoldEarned, winStreak, totalBattles,
+    collectedChars: [...collectedChars],
+    equippedIds: equippedUnits.map(u => u.id),
+    missions: missionState,
+    unitLevels: UNIT_TYPES.reduce((o, u) => { if (u._level) o[u.id] = u._level; return o; }, {}),
+  };
+  localStorage.setItem('maito_war_save', JSON.stringify(data));
+}
+
+function loadGame() {
+  const raw = localStorage.getItem('maito_war_save');
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    playerGems = data.playerGems ?? 30;
+    playerGold = data.playerGold ?? 1200;
+    stamina = data.stamina ?? 40;
+    gachaTickets = data.gachaTickets ?? 3;
+    totalGoldEarned = data.totalGoldEarned ?? 0;
+    winStreak = data.winStreak ?? 0;
+    totalBattles = data.totalBattles ?? 0;
+    collectedChars = new Set(data.collectedChars || []);
+    if (data.equippedIds) {
+      equippedUnits = data.equippedIds.map(id => UNIT_TYPES.find(u => u.id === id)).filter(Boolean);
+    }
+    if (data.unitLevels) {
+      for (const [id, lvl] of Object.entries(data.unitLevels)) {
+        const u = UNIT_TYPES.find(u => u.id === id);
+        if (u) {
+          const baseLvl = u._level || 1;
+          for (let i = baseLvl; i < lvl; i++) {
+            u.hp = Math.floor(u.hp * 1.15);
+            u.atk = Math.floor(u.atk * 1.1);
+          }
+          u._level = lvl;
+        }
+      }
+    }
+    if (data.missions) {
+      for (const [tab, list] of Object.entries(data.missions)) {
+        if (MISSIONS[tab]) {
+          list.forEach(saved => {
+            const m = MISSIONS[tab].find(m => m.id === saved.id);
+            if (m) { m.progress = saved.progress; m.claimed = saved.claimed; }
+          });
+        }
+      }
+    }
+    updateCurrencyDisplay();
+    updateStaminaDisplay();
+    updateMissionBadge();
+  } catch(e) { console.error('loadGame error:', e); }
+}
+
+// loadGame is called after all functions are defined (at end of script)
+
+function advanceMission(id, amount) {
+  for (const tab of Object.values(MISSIONS)) {
+    const m = tab.find(m => m.id === id);
+    if (m && !m.claimed) {
+      m.progress = Math.min(m.progress + amount, m.goal);
+    }
+  }
+  updateHomeMissions();
+  updateMissionBadge();
+  if (document.getElementById('mission-modal-overlay').classList.contains('show')) {
+    renderMissions(currentMissionTab);
+  }
+  saveGame();
+}
+
+function setMissionProgress(id, value) {
+  for (const tab of Object.values(MISSIONS)) {
+    const m = tab.find(m => m.id === id);
+    if (m && !m.claimed) {
+      m.progress = Math.min(value, m.goal);
+    }
+  }
+  updateHomeMissions();
+  updateMissionBadge();
+}
+
+function claimReward(tabName, index) {
+  const m = MISSIONS[tabName][index];
+  if (!m || m.claimed || m.progress < m.goal) return;
+  m.claimed = true;
+  if (m.rewardGold) playerGold += m.rewardGold;
+  if (m.rewardGem) playerGems += m.rewardGem;
+  updateCurrencyDisplay();
+  updateHomeMissions();
+  updateMissionBadge();
+  renderMissions(currentMissionTab);
+  saveGame();
+}
+
+function updateCurrencyDisplay() {
+  const info = document.getElementById('player-info');
+  if (info) {
+    const spans = info.querySelectorAll('.currency span');
+    if (spans[0]) spans[0].textContent = '💰 ' + playerGold.toLocaleString();
+    if (spans[1]) spans[1].textContent = '💎 ' + playerGems;
+    if (spans[2]) spans[2].textContent = '🎫 ' + gachaTickets;
+  }
+  updateStaminaDisplay();
+}
+
+function updateStaminaDisplay() {
+  const label = document.querySelector('#stamina-bar-wrapper .stamina-label');
+  if (label) label.lastElementChild.textContent = `${stamina} / ${MAX_STAMINA}`;
+  const fill = document.getElementById('stamina-bar-fill');
+  if (fill) fill.style.width = `${stamina / MAX_STAMINA * 100}%`;
+}
+
+function updateMissionBadge() {
+  let claimable = 0;
+  for (const tab of Object.values(MISSIONS)) {
+    for (const m of tab) {
+      if (m.progress >= m.goal && !m.claimed) claimable++;
+    }
+  }
+  const badge = document.querySelector('#mission-btn .badge');
+  if (badge) {
+    badge.textContent = claimable;
+    badge.style.display = claimable > 0 ? '' : 'none';
+  }
+}
+
+function updateHomeMissions() {
+  const container = document.getElementById('daily-missions');
+  if (!container) return;
+  const dailies = MISSIONS.daily;
+  let html = '<h3>📋 デイリーミッション</h3>';
+  dailies.forEach(m => {
+    const done = m.progress >= m.goal;
+    const cls = m.claimed ? 'mission-item done' : 'mission-item';
+    html += `<div class="${cls}">
+      <span class="mission-icon">${m.icon}</span>
+      <span class="mission-text">${m.name}</span>
+      <span class="mission-progress">${m.progress}/${m.goal}</span>
+      <span class="mission-reward">${m.claimed ? '済' : (done ? '受取可!' : m.reward)}</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
 
 function openMissionModal() {
   document.getElementById('mission-modal-overlay').classList.add('show');
+  currentMissionTab = 'daily';
+  document.querySelectorAll('.mission-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === 0);
+  });
   renderMissions('daily');
 }
 function closeMissionModal() {
@@ -1402,10 +1658,15 @@ function switchMissionTab(tab) {
 function renderMissions(tab) {
   const body = document.getElementById('mission-modal-body');
   const missions = MISSIONS[tab];
-  body.innerHTML = missions.map(m => {
+  body.innerHTML = missions.map((m, i) => {
     const pct = Math.min(100, m.progress / m.goal * 100);
     const done = m.progress >= m.goal;
     const claimed = m.claimed;
+    let btnText = claimed ? '受取済' : m.reward;
+    let btnClass = claimed ? 'claimed' : '';
+    let btnAttr = '';
+    if (!done && !claimed) btnAttr = 'disabled style="opacity:0.4"';
+    if (done && !claimed) btnAttr = `onclick="claimReward('${tab}',${i})"`;
     return `<div class="modal-mission-item">
       <span class="m-icon">${m.icon}</span>
       <div class="m-info">
@@ -1413,10 +1674,21 @@ function renderMissions(tab) {
         <div class="m-desc">${m.desc} (${m.progress}/${m.goal})</div>
         <div class="m-progress-bar"><div class="m-progress-fill" style="width:${pct}%"></div></div>
       </div>
-      <button class="m-reward-btn ${claimed ? 'claimed' : ''}" ${!done ? 'disabled style="opacity:0.4"' : ''}>${claimed ? '受取済' : m.reward}</button>
+      <button class="m-reward-btn ${btnClass}" ${btnAttr}>${btnText}</button>
     </div>`;
   }).join('');
 }
+// Initialize: load save, then rebuild UI
+try {
+  loadGame();
+  buildEquipGrid();
+  buildEquipGridPage();
+  buildLevelUpList();
+  buildShopList();
+  updateCurrencyDisplay();
+  updateStaminaDisplay();
+  updateMissionBadge();
+} catch(e) { console.error('Init error:', e); }
 </script>
 
 <!-- Mission Modal -->
@@ -1434,5 +1706,6 @@ function renderMissions(tab) {
     <div id="mission-modal-body"></div>
   </div>
 </div>
+<div id="toast"></div>
 </body>
 </html>
