@@ -615,6 +615,18 @@ canvas { display: block; }
 </div>
 
 <script>
+let currentMissionTab = 'daily';
+let playerGems = 30;
+let playerGold = 1200;
+let stamina = 40;
+const MAX_STAMINA = 50;
+const STAMINA_COST = 5;
+let gachaTickets = 3;
+let totalGoldEarned = 0;
+let winStreak = 0;
+let totalBattles = 0;
+let collectedChars = new Set();
+
 window.onerror = function(msg, url, line) {
   var d = document.createElement('div');
   d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:10px;z-index:999999;font-size:14px;';
@@ -1481,17 +1493,7 @@ const MISSIONS = {
     { id: 'a_winstreak', icon: '🔥', name: '無敗の王', desc: '5連勝しよう', progress: 0, goal: 5, reward: '🎫 3', rewardGem: 30 },
   ]
 };
-let currentMissionTab = 'daily';
-let playerGems = 30;
-let playerGold = 1200;
-let stamina = 40;
-const MAX_STAMINA = 50;
-const STAMINA_COST = 5;
-let gachaTickets = 3;
-let totalGoldEarned = 0;
-let winStreak = 0;
-let totalBattles = 0;
-let collectedChars = new Set();
+// (variables moved to top of script)
 
 function saveGame() {
   const missionState = {};
