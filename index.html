@@ -1724,28 +1724,86 @@ function closeStageSelect() {
   document.getElementById('stage-select-overlay').classList.remove('show');
 }
 
+// Stage positions along a winding road on the island (% of map)
+const STAGE_POSITIONS = [
+  { x: 45, y: 88 },  // 1: 南の草原（スタート）
+  { x: 25, y: 72 },  // 2: 西寄り
+  { x: 55, y: 58 },  // 3: 中央東
+  { x: 30, y: 45 },  // 4: 西
+  { x: 60, y: 35 },  // 5: 東
+  { x: 40, y: 22 },  // 6: 北寄り
+  { x: 50, y: 8 },   // 7: 最北（ボス）
+];
+
 function buildStageMap() {
   const map = document.getElementById('stage-map');
   map.innerHTML = '';
-  const positions = [];
-  const nodeSize = 70;
-  const rowH = 90;
   const mapW = map.offsetWidth || 350;
+  const mapH = 650;
+  map.style.height = mapH + 'px';
 
+  const positions = STAGE_POSITIONS.map(p => ({
+    x: mapW * p.x / 100,
+    y: mapH * p.y / 100
+  }));
+
+  // Draw road as SVG
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
+
+  // Road path (curved)
+  let pathD = `M${positions[0].x},${positions[0].y}`;
+  for (let i = 1; i < positions.length; i++) {
+    const prev = positions[i - 1];
+    const cur = positions[i];
+    const cpx = (prev.x + cur.x) / 2;
+    const cpy = prev.y;
+    pathD += ` Q${cpx},${cpy} ${cur.x},${cur.y}`;
+  }
+
+  // Road shadow
+  const roadShadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  roadShadow.setAttribute('d', pathD);
+  roadShadow.setAttribute('fill', 'none');
+  roadShadow.setAttribute('stroke', '#5a4a2a');
+  roadShadow.setAttribute('stroke-width', '12');
+  roadShadow.setAttribute('stroke-linecap', 'round');
+  roadShadow.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(roadShadow);
+
+  // Road
+  const road = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  road.setAttribute('d', pathD);
+  road.setAttribute('fill', 'none');
+  road.setAttribute('stroke', '#c8a860');
+  road.setAttribute('stroke-width', '8');
+  road.setAttribute('stroke-linecap', 'round');
+  road.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(road);
+
+  // Road dashes
+  const roadDash = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  roadDash.setAttribute('d', pathD);
+  roadDash.setAttribute('fill', 'none');
+  roadDash.setAttribute('stroke', '#e8d090');
+  roadDash.setAttribute('stroke-width', '2');
+  roadDash.setAttribute('stroke-dasharray', '8,12');
+  roadDash.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(roadDash);
+
+  map.appendChild(svg);
+
+  // Stage nodes
+  const nodeSize = 70;
   STAGES.forEach((stage, i) => {
     const unlocked = i === 0 || clearedStages.has(STAGES[i - 1].id);
     const cleared = clearedStages.has(stage.id);
     const node = document.createElement('div');
     node.className = 'stage-node' + (unlocked ? '' : ' locked') + (cleared ? ' cleared' : '');
 
-    // Zigzag: even=left, odd=right
-    const xPos = i % 2 === 0 ? mapW * 0.2 - nodeSize / 2 : mapW * 0.7 - nodeSize / 2;
-    const yPos = i * rowH + 10;
-    positions.push({ x: xPos + nodeSize / 2, y: yPos + 28 });
-
     node.style.position = 'absolute';
-    node.style.left = xPos + 'px';
-    node.style.top = yPos + 'px';
+    node.style.left = (positions[i].x - nodeSize / 2) + 'px';
+    node.style.top = (positions[i].y - nodeSize / 2) + 'px';
 
     node.innerHTML = `
       <div class="stage-icon" style="background:${stage.color};">${stage.icon}</div>
@@ -1757,29 +1815,6 @@ function buildStageMap() {
     }
     map.appendChild(node);
   });
-
-  // Set map height
-  map.style.height = (STAGES.length * rowH + 40) + 'px';
-
-  // Draw paths as SVG
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('class', 'stage-paths');
-  svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-  for (let i = 0; i < positions.length - 1; i++) {
-    const from = positions[i];
-    const to = positions[i + 1];
-    const cleared = clearedStages.has(STAGES[i].id);
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', from.x);
-    line.setAttribute('y1', from.y + 28);
-    line.setAttribute('x2', to.x);
-    line.setAttribute('y2', to.y);
-    line.setAttribute('stroke', cleared ? '#ffd700' : '#555');
-    line.setAttribute('stroke-width', cleared ? '4' : '3');
-    line.setAttribute('stroke-dasharray', cleared ? 'none' : '8,6');
-    svg.appendChild(line);
-  }
-  map.insertBefore(svg, map.firstChild);
 }
 
 function startStage(stage) {
