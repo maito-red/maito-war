@@ -1509,6 +1509,7 @@ function startBattle() {
   document.getElementById('info').style.display = 'flex';
   document.getElementById('ui').style.display = 'flex';
   buildBattleUI();
+  allyCastleImg.src = selectedCastle;
   initGame();
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
