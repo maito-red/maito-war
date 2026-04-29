@@ -434,11 +434,26 @@ canvas { display: block; }
 /* Stage select - map style */
 #stage-select-overlay {
   display: none; position: fixed; inset: 0; z-index: 50;
-  background: #3a7a3a;
+  background: #2a6aaa;
   background-image:
-    radial-gradient(circle at 20% 30%, #4a8a3a 0%, transparent 40%),
-    radial-gradient(circle at 70% 60%, #2a6a2a 0%, transparent 50%),
-    radial-gradient(circle at 50% 80%, #4a9a4a 0%, transparent 30%);
+    /* 海 */
+    radial-gradient(ellipse at 90% 15%, #1a5a9a 0%, transparent 30%),
+    radial-gradient(ellipse at 10% 85%, #1a5a9a 0%, transparent 25%),
+    radial-gradient(ellipse at 95% 70%, #2a6aaa 0%, transparent 20%),
+    /* 砂浜 */
+    radial-gradient(ellipse at 75% 25%, #c8b060 0%, transparent 8%),
+    radial-gradient(ellipse at 20% 75%, #c8b060 0%, transparent 6%),
+    /* 草原 */
+    radial-gradient(ellipse at 50% 50%, #3a8a3a 0%, #3a7a3a 30%, transparent 55%),
+    radial-gradient(ellipse at 30% 35%, #4a9a4a 0%, transparent 25%),
+    radial-gradient(ellipse at 60% 60%, #2a7a2a 0%, transparent 20%),
+    /* 山 */
+    radial-gradient(ellipse at 45% 15%, #8a7a5a 0%, transparent 12%),
+    radial-gradient(ellipse at 55% 10%, #9a8a6a 0%, transparent 8%),
+    /* 火山 */
+    radial-gradient(circle at 40% 5%, #aa4a2a 0%, transparent 6%),
+    /* ベース海 */
+    linear-gradient(180deg, #1a4a7a, #2a6aaa 30%, #3a8a3a 40%, #3a7a3a 70%, #2a6a9a 85%, #1a4a7a);
   flex-direction: column; align-items: center;
   overflow-y: auto;
 }
