@@ -431,6 +431,50 @@ canvas { display: block; }
 }
 
 /* Gacha page */
+/* Stage select */
+#stage-select-overlay {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  background: linear-gradient(180deg, #1a3a1a, #0a1a0a);
+  flex-direction: column; align-items: center;
+  overflow-y: auto;
+}
+#stage-select-overlay.show { display: flex; }
+#stage-select-overlay h2 {
+  color: #ffd700; font-size: 24px; margin: 20px 0 10px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+#stage-map {
+  width: 90%; max-width: 500px; position: relative;
+  padding: 20px 0;
+}
+.stage-path {
+  position: absolute; left: 50%; width: 4px; background: #555;
+  transform: translateX(-50%);
+}
+.stage-node {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 12px; margin-bottom: 12px;
+  background: linear-gradient(135deg, #1a1a2a, #2a2a3a);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.15s;
+}
+.stage-node:hover { transform: translateY(-2px); }
+.stage-node.locked { opacity: 0.4; cursor: not-allowed; }
+.stage-node.locked:hover { transform: none; }
+.stage-node .stage-icon {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.stage-node .stage-info { flex: 1; color: white; }
+.stage-node .stage-name { font-size: 15px; font-weight: bold; }
+.stage-node .stage-desc { font-size: 11px; color: #aaa; margin-top: 2px; }
+.stage-node .stage-reward { font-size: 11px; color: #ffd700; margin-top: 2px; }
+.stage-node .stage-stars { font-size: 14px; margin-top: 2px; }
+#stage-back-btn {
+  padding: 12px 40px; font-size: 16px; margin: 10px 0 30px;
+}
+
 #page-gacha {
   overflow: hidden; touch-action: none;
   justify-content: center;
@@ -601,6 +645,13 @@ canvas { display: block; }
       <span class="nav-icon">🛒</span><span class="nav-label">おみせ</span>
     </button>
   </div>
+</div>
+
+<!-- Stage Select -->
+<div id="stage-select-overlay">
+  <h2>🗺️ ステージ選択</h2>
+  <div id="stage-map"></div>
+  <button id="stage-back-btn" onclick="closeStageSelect()">戻る</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -792,8 +843,9 @@ function spawnWave() {
     else pool = ENEMY_TYPES;
 
     const type = pool[Math.floor(Math.random() * pool.length)];
-    const hpMult = 1 + (wave - 1) * 0.15;
-    const atkMult = 1 + (wave - 1) * 0.1;
+    const stageMult = selectedStage ? selectedStage.enemyMult : 1;
+    const hpMult = (1 + (wave - 1) * 0.15) * stageMult;
+    const atkMult = (1 + (wave - 1) * 0.1) * stageMult;
     enemySpawnQueue.push({
       delay: i * 1200,
       type: { ...type, hp: Math.floor(type.hp * hpMult), atk: Math.floor(type.atk * atkMult) }
@@ -990,6 +1042,10 @@ function endGame(won) {
     totalGoldEarned += gold;
     setMissionProgress('w_gold', totalGoldEarned);
     setMissionProgress('a_rich', totalGoldEarned);
+    if (selectedStage) {
+      clearedStages.add(selectedStage.id);
+      saveGame();
+    }
   } else {
     winStreak = 0;
     setMissionProgress('a_winstreak', 0);
@@ -1497,14 +1553,63 @@ function doGachaRoll() {
   }, 600);
 }
 
-function startBattle() {
+const STAGES = [
+  { id: 1, name: 'はじまりの草原', desc: '弱いゴブリンが出現', icon: '🌿', color: '#4a4', waves: 3, enemyMult: 1.0, reward: '💰100' },
+  { id: 2, name: '暗い森', desc: 'オークが潜んでいる', icon: '🌲', color: '#285', waves: 4, enemyMult: 1.2, reward: '💰200' },
+  { id: 3, name: '骸骨の洞窟', desc: 'スケルトンの巣窟', icon: '💀', color: '#666', waves: 5, enemyMult: 1.5, reward: '💎5' },
+  { id: 4, name: '魔導士の塔', desc: '闇魔導士が待ち受ける', icon: '🗼', color: '#63a', waves: 6, enemyMult: 1.8, reward: '💎10' },
+  { id: 5, name: '炎の山', desc: '強力な敵が集結', icon: '🌋', color: '#a33', waves: 7, enemyMult: 2.0, reward: '💎15' },
+  { id: 6, name: '魔王城', desc: 'デーモンが支配する城', icon: '🏰', color: '#822', waves: 8, enemyMult: 2.5, reward: '🎫1' },
+  { id: 7, name: '深淵', desc: '最強の敵が待つ', icon: '🕳️', color: '#333', waves: 10, enemyMult: 3.0, reward: '👑称号' },
+];
+let clearedStages = new Set();
+let selectedStage = null;
+
+function openStageSelect() {
+  const overlay = document.getElementById('stage-select-overlay');
+  overlay.classList.add('show');
+  buildStageMap();
+}
+
+function closeStageSelect() {
+  document.getElementById('stage-select-overlay').classList.remove('show');
+}
+
+function buildStageMap() {
+  const map = document.getElementById('stage-map');
+  map.innerHTML = '';
+  STAGES.forEach((stage, i) => {
+    const unlocked = i === 0 || clearedStages.has(STAGES[i - 1].id);
+    const cleared = clearedStages.has(stage.id);
+    const node = document.createElement('div');
+    node.className = 'stage-node' + (unlocked ? '' : ' locked');
+    node.style.borderLeft = '4px solid ' + stage.color;
+    node.innerHTML = `
+      <div class="stage-icon" style="background:${stage.color};">${stage.icon}</div>
+      <div class="stage-info">
+        <div class="stage-name">${stage.name}</div>
+        <div class="stage-desc">${unlocked ? stage.desc : '???'}</div>
+        <div class="stage-reward">報酬: ${stage.reward}</div>
+        <div class="stage-stars">${cleared ? '⭐⭐⭐' : (unlocked ? '☆☆☆' : '🔒')}</div>
+      </div>
+    `;
+    if (unlocked) {
+      node.onclick = () => startStage(stage);
+    }
+    map.appendChild(node);
+  });
+}
+
+function startStage(stage) {
   if (stamina < STAMINA_COST) {
     showToast('スタミナが足りません！');
     return;
   }
+  selectedStage = stage;
   stamina -= STAMINA_COST;
   updateStaminaDisplay();
   saveGame();
+  closeStageSelect();
   document.getElementById('menu-screen').style.display = 'none';
   document.getElementById('info').style.display = 'flex';
   document.getElementById('ui').style.display = 'flex';
@@ -1513,6 +1618,10 @@ function startBattle() {
   initGame();
   lastTime = performance.now();
   requestAnimationFrame(gameLoop);
+}
+
+function startBattle() {
+  openStageSelect();
 }
 
 // Hide battle UI initially
@@ -1556,6 +1665,7 @@ function saveGame() {
   }
   const data = {
     playerGems, playerGold, stamina, gachaTickets, selectedCastle,
+    clearedStages: [...clearedStages],
     totalGoldEarned, winStreak, totalBattles,
     collectedChars: [...collectedChars],
     equippedIds: equippedUnits.map(u => u.id),
@@ -1574,6 +1684,7 @@ function loadGame() {
     playerGold = data.playerGold ?? 1200;
     stamina = data.stamina ?? 40;
     gachaTickets = data.gachaTickets ?? 3;
+    if (data.clearedStages) clearedStages = new Set(data.clearedStages);
     if (data.selectedCastle) {
       selectedCastle = data.selectedCastle;
       document.getElementById('menu-castle').src = selectedCastle;
