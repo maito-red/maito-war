@@ -523,7 +523,7 @@ canvas { display: block; }
       <div id="stamina-bar"><div id="stamina-bar-fill"></div></div>
     </div>
 
-    <img id="menu-castle" src="お城１.png">
+    <img id="menu-castle" src="お城１.png" onclick="openCastleSelect()" style="cursor:pointer;">
     <button id="play-btn" onclick="startBattle()">バトル開始</button>
 
     <!-- Login Bonus -->
@@ -644,6 +644,47 @@ function toggleProfile() {
 }
 function closeProfile() {
   document.getElementById('profile-modal-overlay').classList.remove('show');
+}
+
+const CASTLE_LIST = ['お城１.png', 'お城２.png'];
+let selectedCastle = 'お城１.png';
+
+function openCastleSelect() {
+  const existing = document.getElementById('castle-select-modal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'castle-select-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'width:85%;max-width:400px;background:linear-gradient(180deg,#1a1a2a,#0d0d1a);border:2px solid #ffd700;border-radius:8px;padding:16px;';
+
+  let html = '<h3 style="color:#ffd700;text-align:center;margin-bottom:12px;">お城を選択</h3>';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">';
+  CASTLE_LIST.forEach(castle => {
+    const isSelected = castle === selectedCastle;
+    html += '<div onclick="selectCastle(\'' + castle + '\')" style="cursor:pointer;border:2px solid ' + (isSelected ? '#ffd700' : '#555') + ';border-radius:4px;padding:8px;text-align:center;background:' + (isSelected ? 'rgba(255,215,0,0.1)' : '#1a1a2a') + ';">';
+    html += '<img src="' + castle + '" style="width:100%;height:auto;object-fit:contain;">';
+    html += '<div style="color:white;font-size:12px;margin-top:4px;">' + castle.replace('.png', '') + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<button onclick="document.getElementById(\'castle-select-modal\').remove()" style="width:100%;padding:10px;margin-top:12px;font-size:14px;">閉じる</button>';
+
+  modal.innerHTML = html;
+  overlay.appendChild(modal);
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
+function selectCastle(castle) {
+  selectedCastle = castle;
+  document.getElementById('menu-castle').src = castle;
+  const profileImg = document.querySelector('#profile-modal img');
+  if (profileImg) profileImg.src = castle;
+  document.getElementById('castle-select-modal').remove();
+  saveGame();
 }
 
 function showToast(msg) {
@@ -1513,7 +1554,7 @@ function saveGame() {
     missionState[tab] = list.map(m => ({ id: m.id, progress: m.progress, claimed: !!m.claimed }));
   }
   const data = {
-    playerGems, playerGold, stamina, gachaTickets,
+    playerGems, playerGold, stamina, gachaTickets, selectedCastle,
     totalGoldEarned, winStreak, totalBattles,
     collectedChars: [...collectedChars],
     equippedIds: equippedUnits.map(u => u.id),
@@ -1532,6 +1573,12 @@ function loadGame() {
     playerGold = data.playerGold ?? 1200;
     stamina = data.stamina ?? 40;
     gachaTickets = data.gachaTickets ?? 3;
+    if (data.selectedCastle) {
+      selectedCastle = data.selectedCastle;
+      document.getElementById('menu-castle').src = selectedCastle;
+      const profileImg = document.querySelector('#profile-modal img');
+      if (profileImg) profileImg.src = selectedCastle;
+    }
     totalGoldEarned = data.totalGoldEarned ?? 0;
     winStreak = data.winStreak ?? 0;
     totalBattles = data.totalBattles ?? 0;
