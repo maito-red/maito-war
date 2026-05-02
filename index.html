@@ -685,6 +685,7 @@ canvas { display: block; }
 <!-- Stage Select -->
 <div id="stage-select-overlay">
   <div id="stage-bg"></div>
+  <img id="stage-my-castle" style="position:absolute;top:12px;left:12px;width:50px;height:50px;z-index:2;object-fit:contain;">
   <h2 style="z-index:2;position:absolute;top:10px;left:50%;transform:translateX(-50%);">🗺️ ステージ選択</h2>
   <div id="stage-map" style="z-index:1;"></div>
   <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:2;display:flex;gap:8px;">
@@ -1607,6 +1608,7 @@ let selectedStage = null;
 function openStageSelect() {
   const overlay = document.getElementById('stage-select-overlay');
   overlay.classList.add('show');
+  document.getElementById('stage-my-castle').src = selectedCastle;
   buildStageBg();
   buildStageMap();
 }
